@@ -619,6 +619,151 @@ footer .dev .badge {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ---------------- Gallery ---------------- */
+.gallery {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F4F8 100%);
+}
+.gallery-grid {
+  column-count: 4;
+  column-gap: 18px;
+}
+@media (max-width: 1000px) { .gallery-grid { column-count: 3; } }
+@media (max-width: 720px)  { .gallery-grid { column-count: 2; } }
+@media (max-width: 420px)  { .gallery-grid { column-count: 2; column-gap: 12px; } }
+
+.shot {
+  break-inside: avoid;
+  margin: 0 0 18px;
+  padding: 8px 8px 14px;
+  background: #0E1F49;
+  border-radius: 22px;
+  box-shadow:
+    0 18px 36px rgba(15, 26, 73, 0.18),
+    0 4px 10px rgba(15, 26, 73, 0.08);
+  position: relative;
+  cursor: zoom-in;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  display: block;
+}
+.shot:hover {
+  transform: translateY(-6px) rotate(0) !important;
+  box-shadow:
+    0 28px 50px rgba(15, 26, 73, 0.30),
+    0 8px 16px rgba(15, 26, 73, 0.12);
+}
+/* Subtle natural rotation for the Pinterest feel */
+.shot:nth-child(3n+1) { transform: rotate(-1.2deg); }
+.shot:nth-child(3n+2) { transform: rotate(0.6deg); }
+.shot:nth-child(3n+3) { transform: rotate(-0.4deg); }
+
+.shot img {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  display: block;
+  background: #F5F7FA;
+}
+.shot::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36%;
+  height: 8px;
+  background: #000;
+  border-radius: 6px;
+  z-index: 2;
+  opacity: 0.55;
+}
+.shot::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.06) 100%);
+  pointer-events: none;
+}
+.shot-caption {
+  display: block;
+  margin: 8px 4px 2px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+/* ---------------- Lightbox ---------------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(8, 12, 25, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.lightbox.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 16px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+  user-select: none;
+}
+.lightbox button {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease, transform 120ms ease;
+}
+.lightbox button:hover { background: rgba(255, 255, 255, 0.26); }
+.lightbox button:active { transform: scale(0.94); }
+.lb-close { top: 24px; right: 24px; }
+.lb-prev  { left: 16px; top: 50%; transform: translateY(-50%); }
+.lb-next  { right: 16px; top: 50%; transform: translateY(-50%); }
+.lb-counter {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: rgba(255, 255, 255, 0.10);
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+@media (max-width: 600px) {
+  .lb-prev, .lb-next { width: 40px; height: 40px; font-size: 18px; }
+  .lb-prev { left: 8px; }
+  .lb-next { right: 8px; }
+}
 </style>
 </head>
 <body>
@@ -632,6 +777,7 @@ footer .dev .badge {
     </a>
     <nav class="nav-links">
       <a href="#features">Features</a>
+      <a href="#gallery">Screenshots</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
       <a href="#download" class="nav-cta">Get the app</a>
@@ -849,6 +995,37 @@ footer .dev .badge {
   </div>
 </section>
 
+<!-- ============ GALLERY ============ -->
+<section class="gallery" id="gallery">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">📱 Screenshots</span>
+      <h2>See PesoFlow<br />in your hand.</h2>
+      <p>The actual app, on a real phone. Tap any screenshot to expand.</p>
+    </div>
+
+    <div class="gallery-grid" id="gallery-grid">
+      <a href="img/1.jpg" class="shot reveal" data-caption="Splash"><img src="img/1.jpg" alt="PesoFlow splash screen" loading="lazy" /></a>
+      <a href="img/2.jpg" class="shot reveal" data-caption="Onboarding"><img src="img/2.jpg" alt="PesoFlow onboarding" loading="lazy" /></a>
+      <a href="img/3.jpg" class="shot reveal" data-caption="Dashboard"><img src="img/3.jpg" alt="PesoFlow dashboard" loading="lazy" /></a>
+      <a href="img/4.jpg" class="shot reveal" data-caption="Wallets"><img src="img/4.jpg" alt="PesoFlow wallets" loading="lazy" /></a>
+      <a href="img/5.jpg" class="shot reveal" data-caption="Goal jar"><img src="img/5.jpg" alt="PesoFlow goal with savings jar" loading="lazy" /></a>
+      <a href="img/6.jpg" class="shot reveal" data-caption="Debts"><img src="img/6.jpg" alt="PesoFlow debt tracker" loading="lazy" /></a>
+      <a href="img/7.jpg" class="shot reveal" data-caption="Search"><img src="img/7.jpg" alt="PesoFlow smart search" loading="lazy" /></a>
+      <a href="img/8.jpg" class="shot reveal" data-caption="Vault"><img src="img/8.jpg" alt="PesoFlow secret vault" loading="lazy" /></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIGHTBOX ============ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot viewer">
+  <button class="lb-close" id="lb-close" aria-label="Close">✕</button>
+  <button class="lb-prev"  id="lb-prev"  aria-label="Previous">‹</button>
+  <button class="lb-next"  id="lb-next"  aria-label="Next">›</button>
+  <img id="lb-img" src="" alt="" />
+  <div class="lb-counter" id="lb-counter">1 / 8</div>
+</div>
+
 <!-- ============ PRIVACY ============ -->
 <section id="privacy">
   <div class="container">
@@ -959,6 +1136,76 @@ footer .dev .badge {
     }
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+  // ---------- Lightbox ----------
+  (function () {
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    const lbCounter = document.getElementById('lb-counter');
+    const closeBtn = document.getElementById('lb-close');
+    const prevBtn = document.getElementById('lb-prev');
+    const nextBtn = document.getElementById('lb-next');
+    const shots = Array.from(document.querySelectorAll('#gallery-grid .shot'));
+    let idx = 0;
+
+    function show(i) {
+      idx = (i + shots.length) % shots.length;
+      const link = shots[idx];
+      const cap = link.getAttribute('data-caption') || '';
+      lbImg.src = link.getAttribute('href');
+      lbImg.alt = cap;
+      lbCounter.textContent = `${idx + 1} / ${shots.length}${cap ? ' · ' + cap : ''}`;
+    }
+    function open(i) {
+      show(i);
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      lb.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    shots.forEach((s, i) => {
+      s.addEventListener('click', (e) => {
+        e.preventDefault();
+        open(i);
+      });
+    });
+    closeBtn.addEventListener('click', close);
+    prevBtn.addEventListener('click', () => show(idx - 1));
+    nextBtn.addEventListener('click', () => show(idx + 1));
+
+    // Click outside the image to close
+    lb.addEventListener('click', (e) => {
+      if (e.target === lb) close();
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowLeft') show(idx - 1);
+      else if (e.key === 'ArrowRight') show(idx + 1);
+    });
+
+    // Swipe (touch) navigation on the lightbox image
+    let sx = 0, sy = 0, swiping = false;
+    lbImg.addEventListener('touchstart', (e) => {
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+      swiping = true;
+    }, { passive: true });
+    lbImg.addEventListener('touchend', (e) => {
+      if (!swiping) return;
+      swiping = false;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        show(dx < 0 ? idx + 1 : idx - 1);
+      }
+    });
+  })();
 </script>
 
 </body>
