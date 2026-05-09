@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PesoFlow — Save smart. Stay secure.</title>
+<meta name="description" content="PesoFlow is a private, on-device Filipino savings app. Track wallets, ipon goals, debts, and your real net worth — without an account, without the cloud." />
+<meta name="theme-color" content="#0E1F49" />
+<meta property="og:title" content="PesoFlow — Save smart. Stay secure." />
+<meta property="og:description" content="A private Filipino savings, wallet, and debt tracker. PIN + biometric locked. Nothing leaves your phone." />
+<meta property="og:image" content="icon.png" />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="icon.png" />
+<link rel="apple-touch-icon" href="icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --primary: #2BB3A4;
+  --primary-dark: #1F8E82;
+  --primary-soft: #D8F1ED;
+  --navy-deep: #0E1F49;
+  --navy-mid: #1B3578;
+  --navy-light: #2752C0;
+  --cyan: #22D3EE;
+  --cyan-light: #A5F3FC;
+  --text: #1B2430;
+  --text-soft: #6B7785;
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --success: #52C28F;
+  --danger: #EF6F6C;
+  --warning: #F5C26B;
+  --radius: 22px;
+  --shadow: 0 8px 32px rgba(15, 26, 73, 0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* ---------------- Nav ---------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  background: rgba(245, 247, 250, 0.85);
+  border-bottom: 1px solid rgba(15, 26, 73, 0.06);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.2px;
+}
+.brand img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+.nav-links {
+  display: flex;
+  gap: 6px;
+}
+.nav-links a {
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-soft);
+  transition: 150ms ease;
+}
+.nav-links a:hover { background: var(--primary-soft); color: var(--primary-dark); }
+.nav-cta {
+  padding: 9px 16px !important;
+  background: var(--text) !important;
+  color: white !important;
+  border-radius: 12px;
+}
+.nav-cta:hover { background: var(--primary-dark) !important; color: white !important; }
+
+@media (max-width: 640px) {
+  .nav-links a:not(.nav-cta) { display: none; }
+}
+
+/* ---------------- Hero ---------------- */
+.hero {
+  position: relative;
+  padding: 64px 0 80px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(43, 179, 164, 0.25), transparent 40%),
+    radial-gradient(circle at 88% 30%, rgba(34, 211, 238, 0.18), transparent 40%),
+    radial-gradient(circle at 70% 90%, rgba(14, 31, 73, 0.10), transparent 50%);
+  z-index: -1;
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+@media (max-width: 880px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin-top: 18px;
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+}
+.hero h1 .accent {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p.lead {
+  margin-top: 18px;
+  font-size: clamp(16px, 2vw, 18px);
+  color: var(--text-soft);
+  max-width: 560px;
+}
+@media (max-width: 880px) { .hero p.lead { margin-inline: auto; } }
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+  align-items: center;
+}
+@media (max-width: 880px) { .cta-row { justify-content: center; } }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 15px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: 0 8px 24px rgba(31, 142, 130, 0.35);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(31, 142, 130, 0.45); }
+.btn-secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid rgba(15, 26, 73, 0.10);
+}
+.btn-secondary:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-dark); }
+
+/* Hero phone mockup */
+.hero-phone {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.phone {
+  position: relative;
+  width: 280px;
+  aspect-ratio: 9 / 19;
+  background: #0E1F49;
+  border-radius: 38px;
+  padding: 12px;
+  box-shadow:
+    0 30px 60px rgba(15, 26, 73, 0.30),
+    0 8px 20px rgba(15, 26, 73, 0.20),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #F5F7FA 0%, #E5F0EE 100%);
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+}
+.phone-notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 22px;
+  background: #0E1F49;
+  border-radius: 16px;
+  z-index: 5;
+}
+.phone-status {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  padding: 6px 26px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  z-index: 4;
+}
+.phone-content {
+  padding: 50px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.balance-card {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 18px;
+  padding: 16px;
+  color: white;
+  box-shadow: 0 10px 24px rgba(31, 142, 130, 0.35);
+}
+.balance-card .label { font-size: 11px; opacity: 0.8; }
+.balance-card .amount { font-size: 24px; font-weight: 800; margin-top: 4px; letter-spacing: -0.5px; }
+.balance-card .net {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+.mini-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.mini-card {
+  background: white;
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 14px rgba(15, 26, 73, 0.06);
+}
+.mini-card .mc-label { font-size: 9px; color: var(--text-soft); font-weight: 600; }
+.mini-card .mc-amount { font-size: 13px; font-weight: 800; margin-top: 2px; }
+
+.wallet-rail {
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+}
+.wallet-chip {
+  flex: 1;
+  border-radius: 14px;
+  padding: 10px;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 0;
+}
+.wallet-chip .wn { font-size: 9px; opacity: 0.85; font-weight: 600; }
+.wallet-chip .wb { font-size: 12px; margin-top: 2px; font-weight: 800; }
+
+/* ---------------- Section ---------------- */
+section {
+  padding: 80px 0;
+}
+.section-head {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 44px;
+}
+.section-head .eyebrow { margin-bottom: 14px; }
+.section-head h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+.section-head p {
+  margin-top: 12px;
+  color: var(--text-soft);
+  font-size: 16px;
+}
+
+/* ---------------- Features ---------------- */
+.features {
+  background: white;
+  border-top: 1px solid rgba(15, 26, 73, 0.06);
+  border-bottom: 1px solid rgba(15, 26, 73, 0.06);
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.feature {
+  background: var(--bg);
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(15, 26, 73, 0.04);
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.feature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
+}
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-size: 20px;
+}
+.feature h3 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+.feature p {
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+.fi-teal { background: var(--primary-soft); color: var(--primary-dark); }
+.fi-blue { background: #DBEAFE; color: #1E40AF; }
+.fi-cyan { background: #CFFAFE; color: #0E7490; }
+.fi-green { background: #DCFCE7; color: #166534; }
+.fi-orange { background: #FFEDD5; color: #9A3412; }
+.fi-red { background: #FEE2E2; color: #991B1B; }
+.fi-purple { background: #EDE9FE; color: #5B21B6; }
+.fi-navy { background: #DBE8FF; color: var(--navy-mid); }
+
+/* ---------------- Showcase strip ---------------- */
+.showcase {
+  background: linear-gradient(135deg, var(--navy-deep), var(--navy-mid));
+  color: white;
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+}
+.showcase::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(34, 211, 238, 0.25), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(43, 179, 164, 0.18), transparent 40%);
+}
+.showcase .container { position: relative; }
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: center;
+}
+@media (max-width: 800px) {
+  .showcase-grid { grid-template-columns: 1fr; }
+}
+.showcase h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+.showcase .lead {
+  margin-top: 14px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 520px;
+}
+.showcase ul {
+  list-style: none;
+  margin-top: 24px;
+  display: grid;
+  gap: 14px;
+}
+.showcase li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.92);
+}
+.showcase li .check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+}
+
+/* The visual jar */
+.jar-wrap {
+  display: flex;
+  justify-content: center;
+}
+.jar {
+  width: 220px;
+  height: 280px;
+  position: relative;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.3));
+}
+.jar-svg { width: 100%; height: 100%; }
+
+/* ---------------- Privacy ---------------- */
+.privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 44px;
+}
+.privacy-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 22px;
+  text-align: center;
+  border: 1px solid rgba(15, 26, 73, 0.06);
+}
+.privacy-card .pi {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 14px;
+  color: white;
+}
+.privacy-card h4 {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.privacy-card p {
+  font-size: 13px;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+/* ---------------- FAQ ---------------- */
+.faq-list { max-width: 760px; margin: 0 auto; display: grid; gap: 10px; }
+.faq {
+  background: white;
+  border-radius: 16px;
+  padding: 20px 22px;
+  border: 1px solid rgba(15, 26, 73, 0.06);
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+.faq:hover { border-color: var(--primary); }
+.faq summary {
+  list-style: none;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: '+';
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--primary);
+  transition: transform 200ms ease;
+}
+.faq[open] summary::after { transform: rotate(45deg); }
+.faq p {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ---------------- CTA bottom ---------------- */
+.cta {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-radius: 28px;
+  padding: 56px 32px;
+  text-align: center;
+  margin: 40px auto 0;
+  max-width: 880px;
+  position: relative;
+  overflow: hidden;
+}
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.20), transparent 30%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.15), transparent 30%);
+}
+.cta * { position: relative; z-index: 1; }
+.cta h2 {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+}
+.cta p {
+  margin-top: 14px;
+  font-size: 15px;
+  opacity: 0.9;
+  max-width: 540px;
+  margin-inline: auto;
+}
+.cta .btn-primary {
+  margin-top: 24px;
+  background: white;
+  color: var(--primary-dark);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.20);
+}
+.cta .btn-primary:hover { background: var(--primary-soft); }
+
+/* ---------------- Footer ---------------- */
+footer {
+  padding: 48px 0 40px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 13px;
+}
+footer .brand { justify-content: center; margin-bottom: 10px; }
+footer .dev {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: white;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 26, 73, 0.08);
+  font-weight: 600;
+  color: var(--text);
+}
+footer .dev .badge {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- Reveal on scroll ---------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <img src="icon.png" alt="PesoFlow icon" />
+      PesoFlow
+    </a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#faq">FAQ</a>
+      <a href="#download" class="nav-cta">Get the app</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div>
+      <span class="eyebrow">🇵🇭 Made for Filipinos · v1.1</span>
+      <h1>Save smart.<br /><span class="accent">Stay secure.</span></h1>
+      <p class="lead">
+        PesoFlow is a private, on-device savings app that tracks every peso across your wallets, ipon goals, and debts — without an account, without the cloud.
+      </p>
+      <div class="cta-row">
+        <a href="#download" class="btn btn-primary">⬇️ Download APK</a>
+        <a href="#features" class="btn btn-secondary">See features</a>
+      </div>
+    </div>
+    <div class="hero-phone">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-notch"></div>
+          <div class="phone-status">
+            <span>9:41</span>
+            <span>●●● ▮</span>
+          </div>
+          <div class="phone-content">
+            <div class="balance-card">
+              <div class="label">Total assets</div>
+              <div class="amount">₱ 234,044</div>
+              <div class="net">📈 Net worth ₱ 214,044</div>
+            </div>
+            <div class="mini-cards">
+              <div class="mini-card">
+                <div class="mc-label">Owed to me</div>
+                <div class="mc-amount">₱ 5,200</div>
+              </div>
+              <div class="mini-card">
+                <div class="mc-label">I owe</div>
+                <div class="mc-amount">₱ 20,000</div>
+              </div>
+            </div>
+            <div class="wallet-rail">
+              <div class="wallet-chip" style="background: linear-gradient(135deg,#2BB3A4,#1F8E82)">
+                <div class="wn">🏦 BDO</div>
+                <div class="wb">₱45K</div>
+              </div>
+              <div class="wallet-chip" style="background: linear-gradient(135deg,#4F8DF7,#3B6BD8)">
+                <div class="wn">📱 GCash</div>
+                <div class="wb">₱8.2K</div>
+              </div>
+              <div class="wallet-chip" style="background: linear-gradient(135deg,#52C28F,#3DA374)">
+                <div class="wn">💵 Cash</div>
+                <div class="wb">₱2.4K</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Everything you need</span>
+      <h2>One app for your<br />money, goals, and debts.</h2>
+      <p>Designed for the way Filipinos actually budget — multi-wallet, paluwagan-aware, and private by default.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature reveal">
+        <div class="feature-icon fi-teal">💳</div>
+        <h3>Multi-wallet tracking</h3>
+        <p>BDO, GCash, Maya, cash, crypto, passbook — every wallet in your life, organised by category and color, with live net worth.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-blue">🔁</div>
+        <h3>Atomic transfers</h3>
+        <p>Move money between wallets in one tap. PesoFlow writes a paired in/out transaction so balances always match — and deletes both sides if you undo.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-green">🎯</div>
+        <h3>Ipon goals</h3>
+        <p>Motor, Emergency Fund, Japan Trip — set targets, watch the savings jar fill up with a wavy liquid + floating coins, and get an ETA from your saving habits.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-orange">🤝</div>
+        <h3>Debt tracker</h3>
+        <p>Money owed to you and money you owe — with partial payments, due dates, and color-coded "Paid / On track / Due soon / Overdue" status.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-cyan">🔍</div>
+        <h3>Smart search</h3>
+        <p>Find any wallet, goal, debt, or transaction by name, person, category or note. Results group by type with one-tap navigation.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-purple">📅</div>
+        <h3>Day · Month · Year filters</h3>
+        <p>Slice your transaction history by today, a specific month, an entire year, or a custom date range. Income, expense, and net are recomputed instantly.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-navy">🛡️</div>
+        <h3>Secret vault</h3>
+        <p>Hidden wallets unlocked by a separate PIN. Vault balances are excluded from your dashboard and net worth — only you know they exist.</p>
+      </div>
+
+      <div class="feature reveal">
+        <div class="feature-icon fi-red">👁️</div>
+        <h3>Hide balances</h3>
+        <p>One tap on the eye icon replaces every amount in the app with ••••••. Perfect for showing your screen to a friend without exposing your balance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JAR SHOWCASE ============ -->
+<section class="showcase">
+  <div class="container">
+    <div class="showcase-grid">
+      <div class="reveal">
+        <span class="eyebrow" style="background: rgba(255,255,255,0.15); color: var(--cyan-light)">🫙 Visual progress</span>
+        <h2 style="margin-top: 14px">A jar that fills up<br />as you save.</h2>
+        <p class="lead">Numbers tell you where you are. The jar makes you <em>feel</em> it. Drop money into your goal and watch the liquid rise with a wavy crest and floating gold coins — every time.</p>
+        <ul>
+          <li><span class="check">✓</span> Animated wave-topped fill, smoothly rising with each deposit</li>
+          <li><span class="check">✓</span> Floating coin silhouettes inside the liquid</li>
+          <li><span class="check">✓</span> Glass shine + lid + percentage readout</li>
+          <li><span class="check">✓</span> Auto-completion celebration when target is reached</li>
+        </ul>
+      </div>
+
+      <div class="jar-wrap reveal">
+        <div class="jar">
+          <svg class="jar-svg" viewBox="0 0 220 280" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.95" />
+                <stop offset="100%" stop-color="#2BB3A4" stop-opacity="0.85" />
+              </linearGradient>
+              <linearGradient id="lid" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#A5F3FC" />
+                <stop offset="100%" stop-color="#22D3EE" />
+              </linearGradient>
+              <clipPath id="jarClip">
+                <path d="M 65 28 L 65 56 Q 65 64 50 72 L 38 80 Q 30 86 30 100 L 30 254 Q 30 268 44 268 L 176 268 Q 190 268 190 254 L 190 100 Q 190 86 182 80 L 170 72 Q 155 64 155 56 L 155 28 Z" />
+              </clipPath>
+            </defs>
+
+            <!-- Lid -->
+            <rect x="55" y="14" width="110" height="20" rx="6" fill="url(#lid)" />
+
+            <!-- Glass body outline -->
+            <path
+              d="M 65 28 L 65 56 Q 65 64 50 72 L 38 80 Q 30 86 30 100 L 30 254 Q 30 268 44 268 L 176 268 Q 190 268 190 254 L 190 100 Q 190 86 182 80 L 170 72 Q 155 64 155 56 L 155 28"
+              fill="rgba(255, 255, 255, 0.06)"
+              stroke="#22D3EE"
+              stroke-width="3"
+              stroke-linejoin="round"
+            />
+
+            <!-- Liquid (clipped to jar) -->
+            <g clip-path="url(#jarClip)">
+              <path d="M 0 150 Q 55 138 110 150 T 220 150 L 220 280 L 0 280 Z" fill="url(#liquid)">
+                <animate attributeName="d" dur="3s" repeatCount="indefinite"
+                  values="
+                    M 0 150 Q 55 138 110 150 T 220 150 L 220 280 L 0 280 Z;
+                    M 0 150 Q 55 162 110 150 T 220 150 L 220 280 L 0 280 Z;
+                    M 0 150 Q 55 138 110 150 T 220 150 L 220 280 L 0 280 Z" />
+              </path>
+              <!-- highlight crest -->
+              <path d="M 0 150 Q 55 138 110 150 T 220 150" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2">
+                <animate attributeName="d" dur="3s" repeatCount="indefinite"
+                  values="
+                    M 0 150 Q 55 138 110 150 T 220 150;
+                    M 0 150 Q 55 162 110 150 T 220 150;
+                    M 0 150 Q 55 138 110 150 T 220 150" />
+              </path>
+              <!-- coins -->
+              <circle cx="80" cy="240" r="12" fill="#FFD166" stroke="#FFA94D" stroke-width="2" />
+              <circle cx="120" cy="248" r="14" fill="#FFD166" stroke="#FFA94D" stroke-width="2" />
+              <circle cx="100" cy="220" r="10" fill="#FFD166" stroke="#FFA94D" stroke-width="2" />
+              <!-- bubbles -->
+              <circle cx="65" cy="170" r="3" fill="rgba(255,255,255,0.5)">
+                <animate attributeName="cy" dur="4s" repeatCount="indefinite" values="200;160;200" />
+              </circle>
+              <circle cx="140" cy="190" r="2.5" fill="rgba(255,255,255,0.5)">
+                <animate attributeName="cy" dur="3.5s" repeatCount="indefinite" values="220;170;220" />
+              </circle>
+              <circle cx="100" cy="180" r="2" fill="rgba(255,255,255,0.5)">
+                <animate attributeName="cy" dur="5s" repeatCount="indefinite" values="240;160;240" />
+              </circle>
+            </g>
+
+            <!-- Diagonal shine -->
+            <line x1="48" y1="100" x2="62" y2="240" stroke="rgba(255,255,255,0.30)" stroke-width="6" stroke-linecap="round" />
+
+            <!-- Percentage -->
+            <text x="110" y="118" text-anchor="middle" fill="#22D3EE" font-family="Plus Jakarta Sans, sans-serif" font-size="32" font-weight="800">62%</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRIVACY ============ -->
+<section id="privacy">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">🔒 Privacy first</span>
+      <h2>Your data never leaves<br />your phone.</h2>
+      <p>No accounts. No cloud sync. No telemetry. PesoFlow stores everything locally, encrypted by your device, and locked behind your PIN.</p>
+    </div>
+
+    <div class="privacy-grid">
+      <div class="privacy-card reveal">
+        <div class="pi">🔐</div>
+        <h4>6-digit PIN</h4>
+        <p>SHA-256 hashed and salted. Required to open the app every time auto-lock triggers.</p>
+      </div>
+      <div class="privacy-card reveal">
+        <div class="pi">👆</div>
+        <h4>Biometric unlock</h4>
+        <p>Fingerprint or Face ID for instant access — falls back to PIN if biometrics fail.</p>
+      </div>
+      <div class="privacy-card reveal">
+        <div class="pi">☁️</div>
+        <h4>No cloud, no account</h4>
+        <p>Nothing is uploaded anywhere. PesoFlow doesn't even ask for an email.</p>
+      </div>
+      <div class="privacy-card reveal">
+        <div class="pi">📤</div>
+        <h4>You own your backup</h4>
+        <p>Export a JSON snapshot when you want, restore on a new device. The file is yours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" style="background: white; border-top: 1px solid rgba(15, 26, 73, 0.06)">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2>Things people ask.</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq reveal">
+        <summary>Is PesoFlow really free?</summary>
+        <p>Yes — PesoFlow is a personal project by Michael Flora, free to use and free to share. There are no ads, no subscriptions, and no in-app purchases.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>Where is my data stored?</summary>
+        <p>Locally on your device, in an encrypted Hive database inside the app's private storage. No data is sent to any server — there isn't even a server to send it to.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>What if I lose my phone?</summary>
+        <p>Your data is gone with the device. That's why the Backup feature in Settings exists — export a JSON file periodically and store it somewhere safe (Google Drive, your computer, anywhere).</p>
+      </details>
+      <details class="faq reveal">
+        <summary>Can I use it on iOS?</summary>
+        <p>The codebase supports iOS, but only the Android APK is published right now. iOS distribution requires an Apple Developer account.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>What is the Secret Vault?</summary>
+        <p>A separate space inside PesoFlow protected by its own PIN (different from the main unlock PIN). Wallets in the vault are excluded from your dashboard, totals, and net worth — only visible after entering the vault PIN.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>How do I install the APK?</summary>
+        <p>Download the APK to your Android phone, tap it in your file manager. Android will ask you to allow "Install unknown apps" once for your browser/file manager — that's normal for any app installed outside the Play Store.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA BOTTOM ============ -->
+<section id="download">
+  <div class="container">
+    <div class="cta reveal">
+      <h2>Start tracking every peso.<br />It only takes a minute.</h2>
+      <p>Set up your PIN, add your first wallet, watch your net worth come to life. No cloud. No accounts. Just you and your money.</p>
+      <a href="#" class="btn btn-primary" id="download-btn">⬇️ Download PesoFlow APK</a>
+      <p style="margin-top: 18px; font-size: 12px; opacity: 0.8;">22.9 MB · Android 7.0+ · Signed for personal use</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <a href="#" class="brand"><img src="icon.png" alt="" />PesoFlow</a>
+    <p>Save smart. Stay secure.</p>
+    <div class="dev">
+      <span class="badge">MF</span>
+      Built by Michael Flora
+    </div>
+    <p style="margin-top: 18px; font-size: 12px; opacity: 0.7;">
+      © <span id="year"></span> PesoFlow · A personal project · Not affiliated with any bank or e-wallet
+    </p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Reveal-on-scroll
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+
+</body>
+</html>
