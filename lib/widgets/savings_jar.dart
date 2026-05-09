@@ -2,17 +2,15 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
-
-/// Animated savings jar visualization. The fill height tracks [progress]
-/// (0..1), with a wavy surface that gently animates and a few coin
-/// silhouettes floating inside.
+/// Animated savings jar visualization styled like the PesoFlow icon family —
+/// navy backdrop, cyan glass, gold coins. Fill height tracks [progress] (0..1)
+/// with a wavy surface that animates and a few coins stacked at the bottom.
 class SavingsJar extends StatefulWidget {
   const SavingsJar({
     super.key,
     required this.progress,
-    this.fillColor = AppColors.primary,
-    this.height = 220,
+    this.fillColor = const Color(0xFF22D3EE),
+    this.height = 240,
   });
 
   final double progress;
@@ -64,126 +62,152 @@ class _SavingsJarState extends State<SavingsJar>
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 0.9,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_wave, _fill]),
-        builder: (_, __) {
-          return CustomPaint(
-            painter: _JarPainter(
-              fill: _currentFill,
-              wavePhase: _wave.value * math.pi * 2,
-              color: widget.fillColor,
+      aspectRatio: 0.75,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0E1F49), Color(0xFF1B3578)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 18),
-                    child: Text(
-                      '${(_currentFill * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: widget.fillColor,
-                        height: 1.0,
-                      ),
-                    ),
-                  ),
+          ),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_wave, _fill]),
+            builder: (_, __) {
+              return CustomPaint(
+                painter: _JarPainter(
+                  fill: _currentFill,
+                  wavePhase: _wave.value * math.pi * 2,
                 ),
-              ],
-            ),
-          );
-        },
+                child: LayoutBuilder(builder: (_, c) {
+                  // Position the % readout inside the jar, above the liquid
+                  // line at low fills, otherwise floating in the upper third.
+                  const topPct = 0.26;
+                  return Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: c.maxHeight * topPct,
+                        child: Center(
+                          child: Text(
+                            '${(_currentFill * 100).round()}%',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFA5F3FC),
+                              height: 1.0,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 }
 
 class _JarPainter extends CustomPainter {
-  _JarPainter({
-    required this.fill,
-    required this.wavePhase,
-    required this.color,
-  });
+  _JarPainter({required this.fill, required this.wavePhase});
 
   final double fill;
   final double wavePhase;
-  final Color color;
+
+  // Brand palette (matches the icon)
+  static const _cyan = Color(0xFF22D3EE);
+  static const _cyanLight = Color(0xFFA5F3FC);
+  static const _teal = Color(0xFF2BB3A4);
+  static const _glassFill = Color(0x33060F26);
+  static const _gold = Color(0xFFFFD166);
+  static const _goldDeep = Color(0xFFFFA94D);
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-
-    // Jar geometry
-    final neckTop = h * 0.04;
-    final neckBottom = h * 0.13;
-    final neckHalfWidth = w * 0.20;
-
-    final bodyTop = neckBottom + 6;
-    final bodyBottom = h - 4;
-    final bodyHalfWidth = w * 0.36;
-    final bodyRadius = 24.0;
-
     final cx = w / 2;
 
-    // ---- Lid (rounded rect at top) ----
+    // ---- Geometry ----
+    final lidH = h * 0.055;
+    final lidW = w * 0.50;
+    final lidTop = h * 0.04;
+
+    final neckTop = lidTop + lidH;
+    final neckBottom = h * 0.16;
+    final neckHalfW = w * 0.18;
+
+    final bodyTop = neckBottom + 6;
+    final bodyBottom = h - h * 0.04;
+    final bodyHalfW = w * 0.42;
+    final bodyRadius = w * 0.10;
+
+    // ---- Lid (rounded rect, light cyan gradient) ----
     final lidRect = Rect.fromCenter(
-      center: Offset(cx, neckTop + 6),
-      width: neckHalfWidth * 2 + 18,
-      height: 16,
+      center: Offset(cx, lidTop + lidH / 2),
+      width: lidW,
+      height: lidH,
     );
-    final lidPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [color.withOpacity(0.85), color.withOpacity(0.55)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(lidRect);
     canvas.drawRRect(
       RRect.fromRectAndRadius(lidRect, const Radius.circular(8)),
-      lidPaint,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [_cyanLight, _cyan],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(lidRect),
     );
 
-    // ---- Jar outline (neck + body) ----
+    // ---- Jar outline path: neck shoulder → rounded body ----
     final jarPath = Path()
-      ..moveTo(cx - neckHalfWidth, neckTop + 14)
-      ..lineTo(cx - neckHalfWidth, neckBottom)
+      ..moveTo(cx - neckHalfW, neckTop)
+      ..lineTo(cx - neckHalfW, neckBottom - 4)
       ..quadraticBezierTo(
-          cx - neckHalfWidth, neckBottom + 8, cx - bodyHalfWidth + 8, bodyTop)
-      ..lineTo(cx - bodyHalfWidth, bodyTop + 8)
+        cx - neckHalfW - 2, neckBottom + 4,
+        cx - bodyHalfW + bodyRadius * 0.4, bodyTop,
+      )
       ..arcToPoint(
-        Offset(cx - bodyHalfWidth + bodyRadius, bodyBottom),
+        Offset(cx - bodyHalfW, bodyTop + bodyRadius),
         radius: Radius.circular(bodyRadius),
         clockwise: false,
       )
-      ..lineTo(cx + bodyHalfWidth - bodyRadius, bodyBottom)
+      ..lineTo(cx - bodyHalfW, bodyBottom - bodyRadius)
       ..arcToPoint(
-        Offset(cx + bodyHalfWidth, bodyBottom - bodyRadius),
+        Offset(cx - bodyHalfW + bodyRadius, bodyBottom),
         radius: Radius.circular(bodyRadius),
         clockwise: false,
       )
-      ..lineTo(cx + bodyHalfWidth, bodyTop + 8)
-      ..lineTo(cx + bodyHalfWidth - 8, bodyTop)
+      ..lineTo(cx + bodyHalfW - bodyRadius, bodyBottom)
+      ..arcToPoint(
+        Offset(cx + bodyHalfW, bodyBottom - bodyRadius),
+        radius: Radius.circular(bodyRadius),
+        clockwise: false,
+      )
+      ..lineTo(cx + bodyHalfW, bodyTop + bodyRadius)
+      ..arcToPoint(
+        Offset(cx + bodyHalfW - bodyRadius * 0.4, bodyTop),
+        radius: Radius.circular(bodyRadius),
+        clockwise: false,
+      )
       ..quadraticBezierTo(
-          cx + neckHalfWidth, neckBottom + 8, cx + neckHalfWidth, neckBottom)
-      ..lineTo(cx + neckHalfWidth, neckTop + 14)
+        cx + neckHalfW + 2, neckBottom + 4,
+        cx + neckHalfW, neckBottom - 4,
+      )
+      ..lineTo(cx + neckHalfW, neckTop)
       ..close();
 
-    // ---- Glass background ----
-    final glassPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          color.withOpacity(0.06),
-          color.withOpacity(0.10),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, w, h));
-    canvas.drawPath(jarPath, glassPaint);
+    // ---- Glass interior (slight dark tint behind liquid for depth) ----
+    canvas.drawPath(jarPath, Paint()..color = _glassFill);
 
-    // ---- Liquid fill (clipped to jar shape) ----
+    // ---- Liquid (clipped to jar) ----
     if (fill > 0) {
       canvas.save();
       canvas.clipPath(jarPath);
@@ -193,130 +217,121 @@ class _JarPainter extends CustomPainter {
       final fillH = (innerBottom - innerTop) * fill;
       final fillTopY = innerBottom - fillH;
 
-      const segments = 24;
+      const segments = 28;
+      // Liquid body
       final liquidPath = Path()..moveTo(0, h);
-      // Wave across the top of the fill
       for (var i = 0; i <= segments; i++) {
         final x = (w / segments) * i;
         final phase = wavePhase + (i / segments) * math.pi * 2;
-        final dy = math.sin(phase) * 4;
-        if (i == 0) {
-          liquidPath.lineTo(x, fillTopY + dy);
-        } else {
-          liquidPath.lineTo(x, fillTopY + dy);
-        }
+        final dy = math.sin(phase) * 5;
+        liquidPath.lineTo(x, fillTopY + dy);
       }
       liquidPath
         ..lineTo(w, h)
         ..close();
 
-      final liquidPaint = Paint()
-        ..shader = LinearGradient(
-          colors: [color.withOpacity(0.85), color.withOpacity(0.55)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ).createShader(Rect.fromLTRB(0, fillTopY, w, h));
-      canvas.drawPath(liquidPath, liquidPaint);
+      canvas.drawPath(
+        liquidPath,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [
+              _cyan.withOpacity(0.95),
+              _teal.withOpacity(0.92),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(Rect.fromLTRB(0, fillTopY, w, h)),
+      );
 
-      // Highlight band along the wave crest
-      final highlight = Path()..moveTo(0, fillTopY);
+      // Highlight crest
+      final crest = Path()..moveTo(0, fillTopY);
       for (var i = 0; i <= segments; i++) {
         final x = (w / segments) * i;
         final phase = wavePhase + (i / segments) * math.pi * 2;
-        final dy = math.sin(phase) * 4;
-        highlight.lineTo(x, fillTopY + dy);
+        final dy = math.sin(phase) * 5;
+        crest.lineTo(x, fillTopY + dy);
       }
       canvas.drawPath(
-        highlight,
+        crest,
         Paint()
-          ..color = Colors.white.withOpacity(0.32)
+          ..color = Colors.white.withOpacity(0.50)
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke,
       );
 
-      // Bubbles & coins
       _drawBubbles(canvas, w, fillTopY, innerBottom);
       _drawCoins(canvas, w, fillTopY, innerBottom);
 
       canvas.restore();
     }
 
-    // ---- Glass border + shine ----
-    final borderPaint = Paint()
-      ..color = color.withOpacity(0.55)
-      ..strokeWidth = 3
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(jarPath, borderPaint);
+    // ---- Glass stroke (cyan) ----
+    canvas.drawPath(
+      jarPath,
+      Paint()
+        ..color = _cyan.withOpacity(0.95)
+        ..strokeWidth = 3
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke,
+    );
 
-    // Diagonal shine
-    final shinePaint = Paint()
-      ..color = Colors.white.withOpacity(0.30)
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
+    // ---- Vertical shine on the left interior ----
+    final shineX = cx - bodyHalfW + bodyRadius * 0.55;
     canvas.drawLine(
-      Offset(cx - bodyHalfWidth + 14, bodyTop + 18),
-      Offset(cx - bodyHalfWidth + 30, bodyBottom - 36),
-      shinePaint,
+      Offset(shineX, bodyTop + h * 0.06),
+      Offset(shineX, bodyBottom - h * 0.30),
+      Paint()
+        ..color = Colors.white.withOpacity(0.30)
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round,
     );
   }
 
   void _drawBubbles(
       Canvas canvas, double w, double surfaceY, double bottomY) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.40);
+    final paint = Paint()..color = Colors.white.withOpacity(0.55);
     final positions = [
-      Offset(w * 0.30, surfaceY + 18),
-      Offset(w * 0.62, surfaceY + 32),
-      Offset(w * 0.45, bottomY - 20),
+      Offset(w * 0.34, surfaceY + 24),
+      Offset(w * 0.62, surfaceY + 48),
+      Offset(w * 0.50, bottomY - (bottomY - surfaceY) * 0.55),
     ];
-    final radii = [3.5, 2.5, 4.0];
+    final radii = [3.0, 2.0, 2.5];
     for (var i = 0; i < positions.length; i++) {
       final dy = math.sin(wavePhase + i) * 2;
-      canvas.drawCircle(
-        positions[i].translate(0, dy),
-        radii[i],
-        paint,
-      );
+      canvas.drawCircle(positions[i].translate(0, dy), radii[i], paint);
     }
   }
 
   void _drawCoins(
       Canvas canvas, double w, double surfaceY, double bottomY) {
-    // Only draw coins if there's enough space
     if (bottomY - surfaceY < 30) return;
-    final coinPaint = Paint()..color = const Color(0xFFFFD166);
-    final coinShade = Paint()..color = const Color(0xFFFFA94D);
+    final coinFace = Paint()..color = _gold;
+    final coinShade = Paint()..color = _goldDeep;
+    final innerStroke = Paint()
+      ..color = const Color(0xFFFFE39C)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
 
     final coins = [
-      _Coin(Offset(w * 0.40, bottomY - 12), 10),
-      _Coin(Offset(w * 0.60, bottomY - 14), 12),
-      _Coin(Offset(w * 0.50, bottomY - 28), 9),
+      _Coin(Offset(w * 0.33, bottomY - 16), 12),
+      _Coin(Offset(w * 0.62, bottomY - 18), 14),
+      _Coin(Offset(w * 0.48, bottomY - 36), 11),
     ];
 
     for (final c in coins) {
-      if (c.center.dy - c.radius < surfaceY + 4) continue;
-      // Lower half — shadow
-      canvas.drawCircle(
-        c.center.translate(1, 1),
-        c.radius,
-        coinShade,
-      );
-      canvas.drawCircle(c.center, c.radius, coinPaint);
+      if (c.center.dy - c.radius < surfaceY + 6) continue;
+      // Soft drop shadow
+      canvas.drawCircle(c.center.translate(1.5, 1.5), c.radius, coinShade);
+      // Face
+      canvas.drawCircle(c.center, c.radius, coinFace);
       // Inner ring
-      canvas.drawCircle(
-        c.center,
-        c.radius - 2,
-        Paint()
-          ..color = const Color(0xFFFFE39C)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
+      canvas.drawCircle(c.center, c.radius - 2, innerStroke);
     }
   }
 
   @override
   bool shouldRepaint(covariant _JarPainter old) =>
-      old.fill != fill || old.wavePhase != wavePhase || old.color != color;
+      old.fill != fill || old.wavePhase != wavePhase;
 }
 
 class _Coin {

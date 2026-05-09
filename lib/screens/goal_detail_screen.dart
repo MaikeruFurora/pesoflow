@@ -60,18 +60,15 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
         children: [
           if (progress != null) ...[
             SoftCard(
-              padding: const EdgeInsets.fromLTRB(16, 18, 20, 18),
+              padding: const EdgeInsets.fromLTRB(14, 14, 18, 14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     flex: 5,
-                    child: SavingsJar(
-                      progress: progress,
-                      fillColor: AppColors.primary,
-                    ),
+                    child: SavingsJar(progress: progress),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
                   Expanded(
                     flex: 6,
                     child: Column(
