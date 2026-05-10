@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -28,6 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _bioError;
   bool _busyBackup = false;
 
+  String _appVersion = '';
+  String _appBuild = '';
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +39,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _bio = storage.biometricEnabled;
     _autoLock = storage.autoLockMinutes;
     _checkBio();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _appVersion = info.version;
+      _appBuild = info.buildNumber;
+    });
   }
 
   Future<void> _checkBio() async {
@@ -508,7 +522,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Version 1.0.0',
+                  _appVersion.isEmpty
+                      ? 'Version …'
+                      : 'Version $_appVersion (build $_appBuild)',
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context)
