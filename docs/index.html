@@ -896,6 +896,84 @@ footer .dev .badge {
     justify-content: flex-end;
   }
 }
+
+/* ---------------- Global mobile pass ---------------- */
+@media (max-width: 760px) {
+  .container       { padding: 0 18px; }
+  .nav-inner       { padding: 12px 18px; }
+  section          { padding: 56px 0; }
+
+  .hero            { padding: 36px 0 56px; }
+  .hero h1         { letter-spacing: -1px; }
+
+  .section-head   { margin-bottom: 32px; }
+
+  .feature        { padding: 20px; }
+  .feature-grid   { gap: 12px; }
+  .feature-grid > .feature[style*="grid-column"] { grid-column: auto !important; }
+
+  .showcase       { padding: 56px 0; }
+  .showcase-grid  { gap: 36px; }
+  .jar            { width: 180px; height: 230px; }
+
+  .privacy-grid   { gap: 12px; margin-top: 32px; }
+  .privacy-card   { padding: 18px; }
+
+  .faq            { padding: 16px 18px; }
+  .faq summary    { font-size: 14px; }
+
+  .cta            { padding: 40px 22px; border-radius: 22px; }
+  .cta h2         { font-size: clamp(22px, 5.6vw, 32px); }
+
+  .versions-list,
+  .versions-warning { max-width: 100%; }
+
+  /* Phone mockup tucks below the hero copy on small screens */
+  .hero-phone     { margin-top: 8px; }
+  .phone          { width: 240px; }
+  .phone-content  { padding: 44px 14px 14px; gap: 10px; }
+  .balance-card   { padding: 14px; }
+  .balance-card .amount { font-size: 22px; }
+  .wallet-rail    { gap: 6px; }
+  .wallet-chip    { padding: 8px; }
+
+  footer          { padding: 36px 0 32px; }
+}
+
+@media (max-width: 480px) {
+  .container       { padding: 0 14px; }
+  .nav-inner       { padding: 10px 14px; }
+  section          { padding: 44px 0; }
+
+  .hero            { padding: 24px 0 44px; }
+  .hero h1         { font-size: clamp(32px, 9vw, 44px); }
+  .hero p.lead     { font-size: 14.5px; }
+
+  .btn             { padding: 12px 18px; font-size: 14px; width: 100%; justify-content: center; }
+  .cta-row         { flex-direction: column; align-items: stretch; }
+
+  .section-head h2 { font-size: clamp(24px, 7vw, 32px); }
+  .section-head p  { font-size: 14.5px; }
+
+  .feature h3      { font-size: 16px; }
+  .feature p       { font-size: 13.5px; }
+  .feature-icon    { width: 40px; height: 40px; font-size: 18px; }
+
+  .jar             { width: 150px; height: 195px; }
+  .showcase li     { font-size: 14px; }
+
+  .privacy-card .pi { width: 46px; height: 46px; font-size: 22px; }
+  .privacy-card h4  { font-size: 14px; }
+  .privacy-card p   { font-size: 12.5px; }
+
+  .cta             { padding: 32px 18px; border-radius: 20px; }
+  .cta p           { font-size: 14px; }
+  .cta .btn        { width: 100%; }
+
+  .lb-close        { top: 14px; right: 14px; width: 40px; height: 40px; }
+
+  .phone          { width: 220px; }
+}
 </style>
 </head>
 <body>
