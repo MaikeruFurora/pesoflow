@@ -211,6 +211,7 @@ class AppState extends ChangeNotifier {
     required double originalAmount,
     DateTime? dueDate,
     String notes = '',
+    String? walletId,
   }) async {
     final debt = Debt(
       id: _uuid.v4(),
@@ -219,17 +220,95 @@ class AppState extends ChangeNotifier {
       originalAmount: originalAmount,
       dueDate: dueDate,
       notes: notes,
+      walletId: (walletId == null || walletId.isEmpty) ? null : walletId,
     );
+    if (debt.walletId != null) {
+      final txn = await _writeDebtPrincipalTxn(debt: debt);
+      debt.linkedWalletTxnId = txn.id;
+    }
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
     return debt;
   }
 
-  Future<void> updateDebt(Debt debt) async {
+  /// Edit an existing debt. If [walletId] is provided (even as ""/null),
+  /// the principal wallet linkage is reconciled to match.
+  Future<void> updateDebt(
+    Debt debt, {
+    String? walletId,
+    bool walletIdProvided = false,
+  }) async {
+    if (walletIdProvided) {
+      final newWalletId =
+          (walletId == null || walletId.isEmpty) ? null : walletId;
+      final oldLinkedId = debt.linkedWalletTxnId;
+      final oldWalletId = debt.walletId;
+
+      if (oldLinkedId != null &&
+          (newWalletId == null || newWalletId != oldWalletId)) {
+        await storage.deleteWalletTxn(oldLinkedId);
+        debt.linkedWalletTxnId = null;
+      }
+      debt.walletId = newWalletId;
+
+      if (newWalletId != null) {
+        if (debt.linkedWalletTxnId != null) {
+          final existing = _walletTxns.firstWhere(
+              (t) => t.id == debt.linkedWalletTxnId,
+              orElse: () => _missingTxn);
+          if (!identical(existing, _missingTxn)) {
+            existing.amount = debt.originalAmount;
+            existing.note = _principalTxnNote(debt);
+            await storage.saveWalletTxn(existing);
+          } else {
+            final txn = await _writeDebtPrincipalTxn(debt: debt);
+            debt.linkedWalletTxnId = txn.id;
+          }
+        } else {
+          final txn = await _writeDebtPrincipalTxn(debt: debt);
+          debt.linkedWalletTxnId = txn.id;
+        }
+      }
+    } else if (debt.linkedWalletTxnId != null) {
+      // No wallet change requested but amount may have. Keep the linked txn
+      // amount in sync so balances stay correct.
+      final existing = _walletTxns.firstWhere(
+          (t) => t.id == debt.linkedWalletTxnId,
+          orElse: () => _missingTxn);
+      if (!identical(existing, _missingTxn) &&
+          existing.amount != debt.originalAmount) {
+        existing.amount = debt.originalAmount;
+        existing.note = _principalTxnNote(debt);
+        await storage.saveWalletTxn(existing);
+      }
+    }
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+  }
+
+  String _principalTxnNote(Debt debt) =>
+      debt.direction == DebtDirection.iOwe
+          ? 'Borrowed from ${debt.party}'
+          : 'Lent to ${debt.party}';
+
+  Future<WalletTxn> _writeDebtPrincipalTxn({required Debt debt}) async {
+    // iOwe → money came IN to your wallet (income). owedToMe → money went OUT (expense).
+    final type = debt.direction == DebtDirection.iOwe
+        ? WalletTxnType.income
+        : WalletTxnType.expense;
+    final txn = WalletTxn(
+      id: _uuid.v4(),
+      walletId: debt.walletId!,
+      type: type,
+      amount: debt.originalAmount,
+      category: 'Debt',
+      note: _principalTxnNote(debt),
+      date: debt.createdAt,
+    );
+    await storage.saveWalletTxn(txn);
+    return txn;
   }
 
   Future<void> deleteDebt(String id) async {
@@ -237,6 +316,9 @@ class AppState extends ChangeNotifier {
         orElse: () => Debt(
             id: '', party: '', direction: DebtDirection.iOwe, originalAmount: 0));
     if (debt.id.isNotEmpty) {
+      if (debt.linkedWalletTxnId != null) {
+        await storage.deleteWalletTxn(debt.linkedWalletTxnId!);
+      }
       for (final p in debt.payments) {
         if (p.linkedWalletTxnId != null) {
           await storage.deleteWalletTxn(p.linkedWalletTxnId!);
@@ -506,15 +588,23 @@ class AppState extends ChangeNotifier {
     // Cascade: any debt payments linked to these wallet txns must go too,
     // since the source-of-truth (the wallet entry) is now gone.
     for (final debt in _debts) {
+      var dirty = false;
       final before = debt.payments.length;
       debt.payments.removeWhere(
         (p) =>
             p.linkedWalletTxnId != null &&
             removedTxnIds.contains(p.linkedWalletTxnId),
       );
-      if (debt.payments.length != before) {
-        await storage.saveDebt(debt);
+      if (debt.payments.length != before) dirty = true;
+      // Principal link: if the wallet txn that opened this debt got deleted,
+      // keep the debt itself but drop the orphaned link.
+      if (debt.linkedWalletTxnId != null &&
+          removedTxnIds.contains(debt.linkedWalletTxnId)) {
+        debt.linkedWalletTxnId = null;
+        debt.walletId = null;
+        dirty = true;
       }
+      if (dirty) await storage.saveDebt(debt);
     }
     _refresh();
     notifyListeners();

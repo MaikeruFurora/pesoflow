@@ -34,6 +34,8 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
   late final TextEditingController _notes;
   late DebtDirection _direction;
   DateTime? _dueDate;
+  String? _walletId;
+  bool _walletTouched = false;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
     _notes = TextEditingController(text: d?.notes ?? '');
     _direction = d?.direction ?? DebtDirection.owedToMe;
     _dueDate = d?.dueDate;
+    _walletId = d?.walletId;
   }
 
   @override
@@ -70,6 +73,7 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
         originalAmount: amount,
         dueDate: _dueDate,
         notes: _notes.text.trim(),
+        walletId: _walletId,
       );
     } else {
       final d = widget.debt!
@@ -78,9 +82,58 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
         ..originalAmount = amount
         ..dueDate = _dueDate
         ..notes = _notes.text.trim();
-      await state.updateDebt(d);
+      await state.updateDebt(
+        d,
+        walletId: _walletId,
+        walletIdProvided: _walletTouched,
+      );
     }
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _pickDebtWallet(List<Wallet> wallets) async {
+    final picked = await showModalBottomSheet<String?>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                'Choose wallet',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.block, size: 20),
+              title: const Text('No wallet (just record the debt)'),
+              onTap: () => Navigator.of(context).pop(''),
+            ),
+            const Divider(height: 1),
+            ...wallets.map(
+              (w) => ListTile(
+                leading: Text(w.emoji, style: const TextStyle(fontSize: 22)),
+                title: Text(w.name),
+                trailing: _walletId == w.id
+                    ? const Icon(Icons.check, size: 18)
+                    : null,
+                onTap: () => Navigator.of(context).pop(w.id),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() {
+      _walletId = picked.isEmpty ? null : picked;
+      _walletTouched = true;
+    });
   }
 
   Future<void> _pickDue() async {
@@ -96,6 +149,11 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.debt != null;
+    final wallets = context.watch<AppState>().wallets;
+    final selectedWallet = _walletId == null
+        ? null
+        : wallets.where((w) => w.id == _walletId).firstOrNull;
+    final isIOwe = _direction == DebtDirection.iOwe;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -162,6 +220,67 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
                 prefixText: '₱ ',
               ),
             ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: wallets.isEmpty ? null : () => _pickDebtWallet(wallets),
+              borderRadius: BorderRadius.circular(14),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: isIOwe
+                      ? 'Money received to wallet (optional)'
+                      : 'Money lent from wallet (optional)',
+                ),
+                child: Row(
+                  children: [
+                    if (selectedWallet != null) ...[
+                      Text(selectedWallet.emoji,
+                          style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(selectedWallet.name)),
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => setState(() {
+                          _walletId = null;
+                          _walletTouched = true;
+                        }),
+                      ),
+                    ] else
+                      Expanded(
+                        child: Text(
+                          wallets.isEmpty
+                              ? 'No wallets — add one in Wallets'
+                              : 'No wallet linked',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.55),
+                          ),
+                        ),
+                      ),
+                    const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+            if (selectedWallet != null) ...[
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  isIOwe
+                      ? 'An income entry will be added to ${selectedWallet.name} for the principal.'
+                      : 'An expense will be deducted from ${selectedWallet.name} for the principal.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.55),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             InkWell(
               onTap: _pickDue,

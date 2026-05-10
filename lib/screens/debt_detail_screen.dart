@@ -224,6 +224,59 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
               ),
             ),
           ],
+          if (debt.walletId != null) ...[
+            const SizedBox(height: 12),
+            Builder(builder: (context) {
+              final w = context
+                  .read<AppState>()
+                  .walletById(debt.walletId!);
+              if (w == null) return const SizedBox.shrink();
+              final wColor = Color(w.colorValue);
+              return SoftCard(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: wColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(w.emoji,
+                            style: const TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isOwedToMe
+                                ? 'Lent from ${w.name}'
+                                : 'Received to ${w.name}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                          Text(
+                            'Principal mirrors a wallet transaction',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.55),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [

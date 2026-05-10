@@ -52,6 +52,15 @@ class Debt {
   DateTime createdAt;
   List<DebtPayment> payments;
 
+  /// Optional wallet the principal flowed through when the debt was opened.
+  /// - iOwe: borrowed money lands in this wallet (income)
+  /// - owedToMe: lent money leaves this wallet (expense)
+  String? walletId;
+
+  /// Mirror id of the wallet txn created for the principal, so we can keep
+  /// them in sync on edit/delete.
+  String? linkedWalletTxnId;
+
   Debt({
     required this.id,
     required this.party,
@@ -61,6 +70,8 @@ class Debt {
     this.notes = '',
     DateTime? createdAt,
     List<DebtPayment>? payments,
+    this.walletId,
+    this.linkedWalletTxnId,
   })  : createdAt = createdAt ?? DateTime.now(),
         payments = payments ?? [];
 
@@ -93,6 +104,8 @@ class Debt {
         'notes': notes,
         'createdAt': createdAt.toIso8601String(),
         'payments': payments.map((p) => p.toJson()).toList(),
+        'walletId': walletId,
+        'linkedWalletTxnId': linkedWalletTxnId,
       };
 
   factory Debt.fromJson(Map<String, dynamic> j) => Debt(
@@ -109,6 +122,8 @@ class Debt {
         payments: ((j['payments'] as List?) ?? const [])
             .map((p) => DebtPayment.fromJson(p as Map<String, dynamic>))
             .toList(),
+        walletId: j['walletId'] as String?,
+        linkedWalletTxnId: j['linkedWalletTxnId'] as String?,
       );
 
   String toRawJson() => jsonEncode(toJson());
