@@ -214,6 +214,7 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
 Future<void> showDebtPaymentSheet(
   BuildContext context, {
   required Debt debt,
+  DebtPayment? payment,
 }) async {
   await showModalBottomSheet(
     context: context,
@@ -223,13 +224,14 @@ Future<void> showDebtPaymentSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
-    builder: (_) => _DebtPaymentSheet(debt: debt),
+    builder: (_) => _DebtPaymentSheet(debt: debt, payment: payment),
   );
 }
 
 class _DebtPaymentSheet extends StatefulWidget {
-  const _DebtPaymentSheet({required this.debt});
+  const _DebtPaymentSheet({required this.debt, this.payment});
   final Debt debt;
+  final DebtPayment? payment;
   @override
   State<_DebtPaymentSheet> createState() => _DebtPaymentSheetState();
 }
@@ -237,11 +239,19 @@ class _DebtPaymentSheet extends StatefulWidget {
 class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
   final _amount = TextEditingController();
   final _note = TextEditingController();
+  late DateTime _date;
+
+  bool get _isEdit => widget.payment != null;
 
   @override
   void initState() {
     super.initState();
-    _amount.text = formatAmountForField(widget.debt.remaining, keepZero: true);
+    final p = widget.payment;
+    _amount.text = p == null
+        ? formatAmountForField(widget.debt.remaining, keepZero: true)
+        : formatAmountForField(p.amount, keepZero: true);
+    _note.text = p?.note ?? '';
+    _date = p?.date ?? DateTime.now();
   }
 
   @override
@@ -251,23 +261,55 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
     super.dispose();
   }
 
+  /// What the headroom is on this payment edit. For a new payment that's
+  /// the remaining balance. For an edit it's remaining + the payment's
+  /// existing amount (so you can raise this row up to the original amount
+  /// of headroom + this entry).
+  double get _maxAllowed {
+    final base = widget.debt.remaining;
+    if (_isEdit) return base + widget.payment!.amount;
+    return base;
+  }
+
   Future<void> _save() async {
     final amount =
         double.tryParse(_amount.text.trim().replaceAll(',', '')) ?? 0;
     if (amount <= 0) return;
-    if (amount > widget.debt.remaining + 0.001) {
+    if (amount > _maxAllowed + 0.001) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Payment exceeds remaining balance.')),
       );
       return;
     }
-    await context.read<AppState>().addDebtPayment(
-          debtId: widget.debt.id,
-          amount: amount,
-          note: _note.text.trim(),
-        );
+    final state = context.read<AppState>();
+    if (_isEdit) {
+      await state.updateDebtPayment(
+        debtId: widget.debt.id,
+        paymentId: widget.payment!.id,
+        amount: amount,
+        note: _note.text.trim(),
+        date: _date,
+      );
+    } else {
+      await state.addDebtPayment(
+        debtId: widget.debt.id,
+        amount: amount,
+        note: _note.text.trim(),
+        date: _date,
+      );
+    }
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) setState(() => _date = picked);
   }
 
   @override
@@ -293,7 +335,7 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Record payment',
+              _isEdit ? 'Edit payment' : 'Record payment',
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -321,10 +363,27 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
                 labelText: 'Note (optional)',
               ),
             ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: _pickDate,
+              borderRadius: BorderRadius.circular(14),
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Payment date'),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                          DateFormat.yMMMMd().format(_date)),
+                    ),
+                    const Icon(Icons.calendar_today_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 22),
             ElevatedButton(
               onPressed: _save,
-              child: const Text('Record payment'),
+              child: Text(_isEdit ? 'Save changes' : 'Record payment'),
             ),
           ],
         ),

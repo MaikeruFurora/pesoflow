@@ -2,19 +2,20 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Animated savings jar visualization styled like the PesoFlow icon family —
-/// navy backdrop, cyan glass, gold coins. Fill height tracks [progress] (0..1)
-/// with a wavy surface that animates and a few coins stacked at the bottom.
+import '../theme/app_theme.dart';
+
+/// Animated savings jar visualization. Renders transparent — meant to sit
+/// inside any background card the parent provides. Fill height tracks
+/// [progress] (0..1) with a wavy surface that animates and gold coins
+/// stacked at the bottom.
 class SavingsJar extends StatefulWidget {
   const SavingsJar({
     super.key,
     required this.progress,
-    this.fillColor = const Color(0xFF22D3EE),
     this.height = 240,
   });
 
   final double progress;
-  final Color fillColor;
   final double height;
 
   @override
@@ -62,55 +63,41 @@ class _SavingsJarState extends State<SavingsJar>
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 0.75,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF0E1F49), Color(0xFF1B3578)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+      aspectRatio: 0.78,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_wave, _fill]),
+        builder: (_, __) {
+          return CustomPaint(
+            painter: _JarPainter(
+              fill: _currentFill,
+              wavePhase: _wave.value * math.pi * 2,
             ),
-          ),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_wave, _fill]),
-            builder: (_, __) {
-              return CustomPaint(
-                painter: _JarPainter(
-                  fill: _currentFill,
-                  wavePhase: _wave.value * math.pi * 2,
-                ),
-                child: LayoutBuilder(builder: (_, c) {
-                  // Position the % readout inside the jar, above the liquid
-                  // line at low fills, otherwise floating in the upper third.
-                  const topPct = 0.26;
-                  return Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        top: c.maxHeight * topPct,
-                        child: Center(
-                          child: Text(
-                            '${(_currentFill * 100).round()}%',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFA5F3FC),
-                              height: 1.0,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
+            child: LayoutBuilder(builder: (_, c) {
+              const topPct = 0.27;
+              return Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: c.maxHeight * topPct,
+                    child: Center(
+                      child: Text(
+                        '${(_currentFill * 100).round()}%',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryDark,
+                          height: 1.0,
+                          letterSpacing: -0.5,
                         ),
                       ),
-                    ],
-                  );
-                }),
+                    ),
+                  ),
+                ],
               );
-            },
-          ),
-        ),
+            }),
+          );
+        },
       ),
     );
   }
@@ -122,11 +109,11 @@ class _JarPainter extends CustomPainter {
   final double fill;
   final double wavePhase;
 
-  // Brand palette (matches the icon)
-  static const _cyan = Color(0xFF22D3EE);
-  static const _cyanLight = Color(0xFFA5F3FC);
-  static const _teal = Color(0xFF2BB3A4);
-  static const _glassFill = Color(0x33060F26);
+  // Brand palette tuned for light backgrounds
+  static const _stroke = AppColors.primary;       // teal jar outline
+  static const _strokeDeep = AppColors.primaryDark;
+  static const _liquidTop = Color(0xFF22D3EE);    // bright cyan
+  static const _liquidBottom = AppColors.primary; // teal
   static const _gold = Color(0xFFFFD166);
   static const _goldDeep = Color(0xFFFFA94D);
 
@@ -150,7 +137,7 @@ class _JarPainter extends CustomPainter {
     final bodyHalfW = w * 0.42;
     final bodyRadius = w * 0.10;
 
-    // ---- Lid (rounded rect, light cyan gradient) ----
+    // ---- Lid (rounded rect, teal gradient) ----
     final lidRect = Rect.fromCenter(
       center: Offset(cx, lidTop + lidH / 2),
       width: lidW,
@@ -160,13 +147,13 @@ class _JarPainter extends CustomPainter {
       RRect.fromRectAndRadius(lidRect, const Radius.circular(8)),
       Paint()
         ..shader = const LinearGradient(
-          colors: [_cyanLight, _cyan],
+          colors: [_stroke, _strokeDeep],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ).createShader(lidRect),
     );
 
-    // ---- Jar outline path: neck shoulder → rounded body ----
+    // ---- Jar outline path ----
     final jarPath = Path()
       ..moveTo(cx - neckHalfW, neckTop)
       ..lineTo(cx - neckHalfW, neckBottom - 4)
@@ -204,8 +191,11 @@ class _JarPainter extends CustomPainter {
       ..lineTo(cx + neckHalfW, neckTop)
       ..close();
 
-    // ---- Glass interior (slight dark tint behind liquid for depth) ----
-    canvas.drawPath(jarPath, Paint()..color = _glassFill);
+    // ---- Glass interior tint (very subtle) ----
+    canvas.drawPath(
+      jarPath,
+      Paint()..color = AppColors.primarySoft.withOpacity(0.35),
+    );
 
     // ---- Liquid (clipped to jar) ----
     if (fill > 0) {
@@ -218,7 +208,6 @@ class _JarPainter extends CustomPainter {
       final fillTopY = innerBottom - fillH;
 
       const segments = 28;
-      // Liquid body
       final liquidPath = Path()..moveTo(0, h);
       for (var i = 0; i <= segments; i++) {
         final x = (w / segments) * i;
@@ -235,15 +224,15 @@ class _JarPainter extends CustomPainter {
         Paint()
           ..shader = LinearGradient(
             colors: [
-              _cyan.withOpacity(0.95),
-              _teal.withOpacity(0.92),
+              _liquidTop.withOpacity(0.92),
+              _liquidBottom.withOpacity(0.92),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ).createShader(Rect.fromLTRB(0, fillTopY, w, h)),
       );
 
-      // Highlight crest
+      // Highlight crest — white sheen along the surface
       final crest = Path()..moveTo(0, fillTopY);
       for (var i = 0; i <= segments; i++) {
         final x = (w / segments) * i;
@@ -254,7 +243,7 @@ class _JarPainter extends CustomPainter {
       canvas.drawPath(
         crest,
         Paint()
-          ..color = Colors.white.withOpacity(0.50)
+          ..color = Colors.white.withOpacity(0.55)
           ..strokeWidth = 2
           ..style = PaintingStyle.stroke,
       );
@@ -265,23 +254,23 @@ class _JarPainter extends CustomPainter {
       canvas.restore();
     }
 
-    // ---- Glass stroke (cyan) ----
+    // ---- Glass stroke (teal) ----
     canvas.drawPath(
       jarPath,
       Paint()
-        ..color = _cyan.withOpacity(0.95)
+        ..color = _stroke
         ..strokeWidth = 3
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke,
     );
 
-    // ---- Vertical shine on the left interior ----
+    // ---- Vertical highlight on the left interior ----
     final shineX = cx - bodyHalfW + bodyRadius * 0.55;
     canvas.drawLine(
       Offset(shineX, bodyTop + h * 0.06),
       Offset(shineX, bodyBottom - h * 0.30),
       Paint()
-        ..color = Colors.white.withOpacity(0.30)
+        ..color = Colors.white.withOpacity(0.55)
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round,
     );
@@ -320,11 +309,8 @@ class _JarPainter extends CustomPainter {
 
     for (final c in coins) {
       if (c.center.dy - c.radius < surfaceY + 6) continue;
-      // Soft drop shadow
       canvas.drawCircle(c.center.translate(1.5, 1.5), c.radius, coinShade);
-      // Face
       canvas.drawCircle(c.center, c.radius, coinFace);
-      // Inner ring
       canvas.drawCircle(c.center, c.radius - 2, innerStroke);
     }
   }

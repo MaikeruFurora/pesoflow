@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +7,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/money_text.dart';
 import '../widgets/soft_card.dart';
+import 'debt_detail_screen.dart';
 import 'debt_edit_sheet.dart';
 
 class DebtsScreen extends StatefulWidget {
@@ -220,35 +220,11 @@ class _DebtTile extends StatelessWidget {
         ? 0.0
         : (debt.totalPaid / debt.originalAmount).clamp(0.0, 1.0);
     final color = _statusColor();
-    return Slidable(
-      key: ValueKey(debt.id),
-      endActionPane: ActionPane(
-        motion: const DrawerMotion(),
-        extentRatio: 0.5,
-        children: [
-          SlidableAction(
-            onPressed: (_) => showDebtEditSheet(context, debt: debt),
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            icon: Icons.edit_outlined,
-            label: 'Edit',
-            borderRadius: BorderRadius.circular(20),
-          ),
-          SlidableAction(
-            onPressed: (_) => _confirmDelete(context),
-            backgroundColor: AppColors.danger,
-            foregroundColor: Colors.white,
-            icon: Icons.delete_outline,
-            label: 'Delete',
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ],
-      ),
-      child: SoftCard(
-        onTap: debt.isPaid
-            ? null
-            : () => showDebtPaymentSheet(context, debt: debt),
-        padding: const EdgeInsets.all(16),
+    return SoftCard(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => DebtDetailScreen(debtId: debt.id),
+      )),
+      padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -354,34 +330,8 @@ class _DebtTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   String _compact(double v) => formatMoneyCompact(v);
-
-  Future<void> _confirmDelete(BuildContext context) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete debt entry?'),
-        content: const Text(
-            'Payment history will also be removed. This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete',
-                style: TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
-    );
-    if (ok == true && context.mounted) {
-      await context.read<AppState>().deleteDebt(debt.id);
-    }
-  }
 }

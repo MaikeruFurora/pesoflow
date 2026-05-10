@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +7,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_filter.dart';
 import '../widgets/money_text.dart';
+import '../widgets/row_actions.dart';
 import '../widgets/savings_jar.dart';
 import '../widgets/soft_card.dart';
 import 'goal_edit_sheet.dart';
@@ -45,14 +45,18 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
       appBar: AppBar(
         title: Text('${goal.emoji}  ${goal.name}'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => showGoalEditSheet(context, goal: goal),
+          AppBarIconAction(
+            icon: Icons.edit_outlined,
+            tooltip: 'Edit goal',
+            onTap: () => showGoalEditSheet(context, goal: goal),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () => _confirmDelete(context),
+          AppBarIconAction(
+            icon: Icons.delete_outline,
+            tooltip: 'Delete goal',
+            danger: true,
+            onTap: () => _confirmDelete(context),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: ListView(
@@ -320,25 +324,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
           else
             ...txns.map((t) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Slidable(
-                    key: ValueKey(t.id),
-                    endActionPane: ActionPane(
-                      motion: const DrawerMotion(),
-                      extentRatio: 0.25,
-                      children: [
-                        SlidableAction(
-                          onPressed: (_) => context
-                              .read<AppState>()
-                              .deleteTransaction(t.id),
-                          backgroundColor: AppColors.danger,
-                          foregroundColor: Colors.white,
-                          icon: Icons.delete_outline,
-                          label: 'Delete',
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ],
-                    ),
-                    child: _TxnTile(t: t),
+                  child: _TxnTile(
+                    t: t,
+                    onDelete: () => _confirmDeleteTxn(t.id),
                   ),
                 )),
         ],
@@ -366,6 +354,32 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     if (perDay <= 0) return null;
     final daysLeft = (remaining / perDay).ceil();
     return DateTime.now().add(Duration(days: daysLeft));
+  }
+
+  Future<void> _confirmDeleteTxn(String txnId) async {
+    final state = context.read<AppState>();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete this transaction?'),
+        content: const Text(
+            'The amount will be removed from your goal\'s balance.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete',
+                style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await state.deleteTransaction(txnId);
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -396,14 +410,16 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
 }
 
 class _TxnTile extends StatelessWidget {
-  const _TxnTile({required this.t});
+  const _TxnTile({required this.t, this.onDelete});
   final TxnEntry t;
+  final VoidCallback? onDelete;
+
   @override
   Widget build(BuildContext context) {
     final isDeposit = t.type == TxnType.deposit;
     final color = isDeposit ? AppColors.success : AppColors.danger;
     return SoftCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
       child: Row(
         children: [
           Container(
@@ -447,6 +463,7 @@ class _TxnTile extends StatelessWidget {
             t.amount,
             style: TextStyle(color: color, fontWeight: FontWeight.w700),
           ),
+          if (onDelete != null) RowMoreMenu(onDelete: onDelete),
         ],
       ),
     );

@@ -247,6 +247,34 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateDebtPayment({
+    required String debtId,
+    required String paymentId,
+    required double amount,
+    String note = '',
+    DateTime? date,
+  }) async {
+    final debt = _debts.firstWhere((d) => d.id == debtId);
+    final p = debt.payments.firstWhere((p) => p.id == paymentId);
+    p.amount = amount;
+    p.note = note;
+    if (date != null) p.date = date;
+    await storage.saveDebt(debt);
+    _refresh();
+    notifyListeners();
+  }
+
+  Future<void> deleteDebtPayment({
+    required String debtId,
+    required String paymentId,
+  }) async {
+    final debt = _debts.firstWhere((d) => d.id == debtId);
+    debt.payments.removeWhere((p) => p.id == paymentId);
+    await storage.saveDebt(debt);
+    _refresh();
+    notifyListeners();
+  }
+
   // ----- Wallets ---------------------------------------------------------
   List<WalletTxn> walletTxnsFor(String walletId) =>
       _walletTxns.where((t) => t.walletId == walletId).toList();

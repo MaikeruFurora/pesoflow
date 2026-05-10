@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +8,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_filter.dart';
 import '../widgets/money_text.dart';
+import '../widgets/row_actions.dart';
 import '../widgets/soft_card.dart';
 import 'transfer_sheet.dart';
 import 'wallet_edit_sheet.dart';
@@ -55,15 +55,18 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
       appBar: AppBar(
         title: Text('${wallet.emoji}  ${wallet.name}'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () =>
-                showWalletEditSheet(context, wallet: wallet),
+          AppBarIconAction(
+            icon: Icons.edit_outlined,
+            tooltip: 'Edit wallet',
+            onTap: () => showWalletEditSheet(context, wallet: wallet),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: _confirmDelete,
+          AppBarIconAction(
+            icon: Icons.delete_outline,
+            tooltip: 'Delete wallet',
+            danger: true,
+            onTap: _confirmDelete,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: ListView(
@@ -298,25 +301,9 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
                 ),
                 ...e.value.map((t) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: Slidable(
-                        key: ValueKey(t.id),
-                        endActionPane: ActionPane(
-                          motion: const DrawerMotion(),
-                          extentRatio: 0.25,
-                          children: [
-                            SlidableAction(
-                              onPressed: (_) => context
-                                  .read<AppState>()
-                                  .deleteWalletTxn(t.id),
-                              backgroundColor: AppColors.danger,
-                              foregroundColor: Colors.white,
-                              icon: Icons.delete_outline,
-                              label: 'Delete',
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ],
-                        ),
-                        child: _TxnTile(t: t),
+                      child: _TxnTile(
+                        t: t,
+                        onDelete: () => _confirmDeleteTxn(t),
                       ),
                     )),
               ];
@@ -333,6 +320,36 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
       (map[key] ??= []).add(t);
     }
     return map;
+  }
+
+  Future<void> _confirmDeleteTxn(WalletTxn t) async {
+    final state = context.read<AppState>();
+    final isTransfer = t.linkedTxnId != null;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(isTransfer
+            ? 'Delete this transfer?'
+            : 'Delete this transaction?'),
+        content: Text(isTransfer
+            ? 'Both the in and out sides of this transfer will be removed.'
+            : 'This will remove the transaction and adjust the wallet\'s balance.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete',
+                style: TextStyle(color: AppColors.danger)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await state.deleteWalletTxn(t.id);
+    }
   }
 
   Future<void> _confirmDelete() async {
@@ -477,8 +494,9 @@ class _Stat extends StatelessWidget {
 }
 
 class _TxnTile extends StatelessWidget {
-  const _TxnTile({required this.t});
+  const _TxnTile({required this.t, this.onDelete});
   final WalletTxn t;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -514,7 +532,7 @@ class _TxnTile extends StatelessWidget {
 
     final isCredit = t.signedAmount >= 0;
     return SoftCard(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.fromLTRB(14, 12, onDelete == null ? 14 : 6, 12),
       child: Row(
         children: [
           Container(
@@ -562,6 +580,7 @@ class _TxnTile extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+          if (onDelete != null) RowMoreMenu(onDelete: onDelete),
         ],
       ),
     );

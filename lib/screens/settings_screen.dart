@@ -496,7 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                           const Text(
-                            'Michael Flora',
+                            'MaikeruFurora',
                             style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 14),
@@ -508,7 +508,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Version 1.1.0',
+                  'Version 1.0.0',
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context)
