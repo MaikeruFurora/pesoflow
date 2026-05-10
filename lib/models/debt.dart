@@ -8,11 +8,19 @@ class DebtPayment {
   DateTime date;
   String note;
 
+  /// Optional wallet this payment was deposited to / drawn from.
+  String? walletId;
+
+  /// The mirrored WalletTxn id (so we can keep them in sync on edit/delete).
+  String? linkedWalletTxnId;
+
   DebtPayment({
     required this.id,
     required this.amount,
     DateTime? date,
     this.note = '',
+    this.walletId,
+    this.linkedWalletTxnId,
   }) : date = date ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -20,6 +28,8 @@ class DebtPayment {
         'amount': amount,
         'date': date.toIso8601String(),
         'note': note,
+        'walletId': walletId,
+        'linkedWalletTxnId': linkedWalletTxnId,
       };
 
   factory DebtPayment.fromJson(Map<String, dynamic> j) => DebtPayment(
@@ -27,6 +37,8 @@ class DebtPayment {
         amount: (j['amount'] as num).toDouble(),
         date: DateTime.parse(j['date'] as String),
         note: j['note'] as String? ?? '',
+        walletId: j['walletId'] as String?,
+        linkedWalletTxnId: j['linkedWalletTxnId'] as String?,
       );
 }
 

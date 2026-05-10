@@ -7,6 +7,7 @@ import 'screens/intro_screen.dart';
 import 'screens/lock_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/tour_screen.dart';
 import 'services/auth_service.dart';
 import 'services/storage_service.dart';
 import 'state/app_state.dart';
@@ -56,6 +57,7 @@ class _RootGateState extends State<_RootGate>
   bool _introDone = false;
   bool _locked = true;
   bool _onboarded = false;
+  bool _tourDone = true;
   DateTime? _backgroundedAt;
 
   @override
@@ -75,6 +77,7 @@ class _RootGateState extends State<_RootGate>
     // straight into a half-finished setup.
     _introDone = _onboarded;
     _locked = _onboarded;
+    _tourDone = auth.storage.tourSeen;
   }
 
   @override
@@ -125,6 +128,12 @@ class _RootGateState extends State<_RootGate>
     if (_locked) {
       return LockScreen(onUnlocked: () {
         setState(() => _locked = false);
+      });
+    }
+    if (!_tourDone) {
+      return TourScreen(onDone: () {
+        context.read<StorageService>().tourSeen = true;
+        setState(() => _tourDone = true);
       });
     }
     return const HomeShell();

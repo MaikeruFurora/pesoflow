@@ -112,6 +112,9 @@ class StorageService {
       (settings.get('hideBalances') as bool?) ?? false;
   set hideBalances(bool v) => settings.put('hideBalances', v);
 
+  bool get tourSeen => (settings.get('tourSeen') as bool?) ?? false;
+  set tourSeen(bool v) => settings.put('tourSeen', v);
+
   String? get vaultPinHash => settings.get('vaultPinHash') as String?;
   set vaultPinHash(String? v) => settings.put('vaultPinHash', v);
 }

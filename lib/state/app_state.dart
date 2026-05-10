@@ -225,6 +225,16 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> deleteDebt(String id) async {
+    final debt = _debts.firstWhere((d) => d.id == id,
+        orElse: () => Debt(
+            id: '', party: '', direction: DebtDirection.iOwe, originalAmount: 0));
+    if (debt.id.isNotEmpty) {
+      for (final p in debt.payments) {
+        if (p.linkedWalletTxnId != null) {
+          await storage.deleteWalletTxn(p.linkedWalletTxnId!);
+        }
+      }
+    }
     await storage.deleteDebt(id);
     _refresh();
     notifyListeners();
@@ -235,14 +245,25 @@ class AppState extends ChangeNotifier {
     required double amount,
     String note = '',
     DateTime? date,
+    String? walletId,
   }) async {
     final debt = _debts.firstWhere((d) => d.id == debtId);
-    debt.payments.add(DebtPayment(
+    final payment = DebtPayment(
       id: _uuid.v4(),
       amount: amount,
       note: note,
       date: date,
-    ));
+      walletId: walletId,
+    );
+    if (walletId != null && walletId.isNotEmpty) {
+      final txn = await _writeDebtWalletTxn(
+        debt: debt,
+        payment: payment,
+        walletId: walletId,
+      );
+      payment.linkedWalletTxnId = txn.id;
+    }
+    debt.payments.add(payment);
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
@@ -254,12 +275,49 @@ class AppState extends ChangeNotifier {
     required double amount,
     String note = '',
     DateTime? date,
+    String? walletId,
   }) async {
     final debt = _debts.firstWhere((d) => d.id == debtId);
     final p = debt.payments.firstWhere((p) => p.id == paymentId);
     p.amount = amount;
     p.note = note;
     if (date != null) p.date = date;
+
+    final newWalletId = (walletId == null || walletId.isEmpty) ? null : walletId;
+    final oldLinkedId = p.linkedWalletTxnId;
+    final oldWalletId = p.walletId;
+
+    if (oldLinkedId != null && (newWalletId == null || newWalletId != oldWalletId)) {
+      // Wallet removed or changed — drop the previous linked txn.
+      await storage.deleteWalletTxn(oldLinkedId);
+      p.linkedWalletTxnId = null;
+    }
+
+    p.walletId = newWalletId;
+
+    if (newWalletId != null) {
+      if (p.linkedWalletTxnId != null) {
+        // Same wallet, just update amount/note/date on the existing txn.
+        final existing = _walletTxns
+            .firstWhere((t) => t.id == p.linkedWalletTxnId, orElse: () => _missingTxn);
+        if (!identical(existing, _missingTxn)) {
+          existing.amount = amount;
+          existing.note = _debtTxnNote(debt, note);
+          existing.date = p.date;
+          await storage.saveWalletTxn(existing);
+        } else {
+          // Linked txn was independently deleted — recreate it.
+          final txn = await _writeDebtWalletTxn(
+            debt: debt, payment: p, walletId: newWalletId);
+          p.linkedWalletTxnId = txn.id;
+        }
+      } else {
+        final txn = await _writeDebtWalletTxn(
+          debt: debt, payment: p, walletId: newWalletId);
+        p.linkedWalletTxnId = txn.id;
+      }
+    }
+
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
@@ -270,10 +328,46 @@ class AppState extends ChangeNotifier {
     required String paymentId,
   }) async {
     final debt = _debts.firstWhere((d) => d.id == debtId);
+    final p = debt.payments.firstWhere((x) => x.id == paymentId,
+        orElse: () => DebtPayment(id: '', amount: 0));
+    if (p.id.isNotEmpty && p.linkedWalletTxnId != null) {
+      await storage.deleteWalletTxn(p.linkedWalletTxnId!);
+    }
     debt.payments.removeWhere((p) => p.id == paymentId);
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+  }
+
+  static final WalletTxn _missingTxn = WalletTxn(
+    id: '', walletId: '', type: WalletTxnType.income, amount: 0);
+
+  String _debtTxnNote(Debt debt, String userNote) {
+    final base = debt.direction == DebtDirection.iOwe
+        ? 'Debt payment: ${debt.party}'
+        : 'Debt collected: ${debt.party}';
+    return userNote.isEmpty ? base : '$base — $userNote';
+  }
+
+  Future<WalletTxn> _writeDebtWalletTxn({
+    required Debt debt,
+    required DebtPayment payment,
+    required String walletId,
+  }) async {
+    final type = debt.direction == DebtDirection.iOwe
+        ? WalletTxnType.expense
+        : WalletTxnType.income;
+    final txn = WalletTxn(
+      id: _uuid.v4(),
+      walletId: walletId,
+      type: type,
+      amount: payment.amount,
+      category: 'Debt',
+      note: _debtTxnNote(debt, payment.note),
+      date: payment.date,
+    );
+    await storage.saveWalletTxn(txn);
+    return txn;
   }
 
   // ----- Wallets ---------------------------------------------------------

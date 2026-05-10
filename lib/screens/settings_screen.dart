@@ -14,6 +14,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/soft_card.dart';
 import 'onboarding_screen.dart';
+import 'tour_screen.dart';
 import 'vault_unlock_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -417,6 +418,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: _busyBackup ? null : _importBackup,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _Header(text: 'Help'),
+          SoftCard(
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.tips_and_updates_rounded,
+                  color: AppColors.primary),
+              title: const Text('Take the tour'),
+              subtitle: const Text(
+                  'A quick walkthrough of every feature in PesoFlow'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => TourScreen(
+                      onDone: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),

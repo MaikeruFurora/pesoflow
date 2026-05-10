@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/debt.dart';
+import '../models/wallet.dart';
 import '../state/app_state.dart';
 import '../widgets/money_input.dart';
 
@@ -240,6 +241,7 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
   final _amount = TextEditingController();
   final _note = TextEditingController();
   late DateTime _date;
+  String? _walletId;
 
   bool get _isEdit => widget.payment != null;
 
@@ -252,6 +254,7 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
         : formatAmountForField(p.amount, keepZero: true);
     _note.text = p?.note ?? '';
     _date = p?.date ?? DateTime.now();
+    _walletId = p?.walletId;
   }
 
   @override
@@ -290,6 +293,7 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
         amount: amount,
         note: _note.text.trim(),
         date: _date,
+        walletId: _walletId,
       );
     } else {
       await state.addDebtPayment(
@@ -297,9 +301,52 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
         amount: amount,
         note: _note.text.trim(),
         date: _date,
+        walletId: _walletId,
       );
     }
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _pickWallet(List<Wallet> wallets) async {
+    final picked = await showModalBottomSheet<String?>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                'Choose wallet',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.block, size: 20),
+              title: const Text('No wallet (just record)'),
+              onTap: () => Navigator.of(context).pop(''),
+            ),
+            const Divider(height: 1),
+            ...wallets.map(
+              (w) => ListTile(
+                leading: Text(w.emoji, style: const TextStyle(fontSize: 22)),
+                title: Text(w.name),
+                trailing: _walletId == w.id
+                    ? const Icon(Icons.check, size: 18)
+                    : null,
+                onTap: () => Navigator.of(context).pop(w.id),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return; // dismissed
+    setState(() => _walletId = picked.isEmpty ? null : picked);
   }
 
   Future<void> _pickDate() async {
@@ -314,6 +361,11 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final wallets = context.watch<AppState>().wallets;
+    final selectedWallet = _walletId == null
+        ? null
+        : wallets.where((w) => w.id == _walletId).firstOrNull;
+    final isIOwe = widget.debt.direction == DebtDirection.iOwe;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -380,6 +432,64 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: wallets.isEmpty ? null : () => _pickWallet(wallets),
+              borderRadius: BorderRadius.circular(14),
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: isIOwe
+                      ? 'Pay from wallet (optional)'
+                      : 'Receive to wallet (optional)',
+                ),
+                child: Row(
+                  children: [
+                    if (selectedWallet != null) ...[
+                      Text(selectedWallet.emoji,
+                          style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(selectedWallet.name)),
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () => setState(() => _walletId = null),
+                      ),
+                    ] else
+                      Expanded(
+                        child: Text(
+                          wallets.isEmpty
+                              ? 'No wallets — add one in Wallets'
+                              : 'No wallet linked',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.55),
+                          ),
+                        ),
+                      ),
+                    const Icon(Icons.account_balance_wallet_outlined, size: 18),
+                  ],
+                ),
+              ),
+            ),
+            if (selectedWallet != null) ...[
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  isIOwe
+                      ? 'An expense will be recorded on ${selectedWallet.name}.'
+                      : 'Income will be recorded on ${selectedWallet.name}.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.55),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 22),
             ElevatedButton(
               onPressed: _save,
