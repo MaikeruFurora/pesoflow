@@ -36,6 +36,14 @@ class AppState extends ChangeNotifier {
   List<Wallet> get vaultWallets => List.unmodifiable(
       _wallets.where((w) => !w.archived && w.isVault));
 
+  /// Look up a wallet by id across both public and vault sets.
+  Wallet? walletById(String id) {
+    for (final w in _wallets) {
+      if (w.id == id) return w;
+    }
+    return null;
+  }
+
   Set<String> get _vaultWalletIds =>
       _wallets.where((w) => w.isVault).map((w) => w.id).toSet();
 
@@ -402,6 +410,7 @@ class AppState extends ChangeNotifier {
     required WalletCategory category,
     String emoji = '💳',
     int colorValue = 0xFF2BB3A4,
+    int colorValue2 = 0,
     double openingBalance = 0,
     String notes = '',
     bool isVault = false,
@@ -414,6 +423,7 @@ class AppState extends ChangeNotifier {
       category: category,
       emoji: emoji,
       colorValue: colorValue,
+      colorValue2: colorValue2,
       openingBalance: openingBalance,
       notes: notes,
       sortOrder: _wallets.length,
@@ -479,6 +489,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> deleteWalletTxn(String id) async {
     final t = _walletTxns.firstWhere((x) => x.id == id);
+    final removedTxnIds = <String>{};
     if (t.linkedTxnId != null) {
       // delete the paired side too
       final pairs = _walletTxns
@@ -486,9 +497,24 @@ class AppState extends ChangeNotifier {
           .toList();
       for (final p in pairs) {
         await storage.deleteWalletTxn(p.id);
+        removedTxnIds.add(p.id);
       }
     } else {
       await storage.deleteWalletTxn(id);
+      removedTxnIds.add(id);
+    }
+    // Cascade: any debt payments linked to these wallet txns must go too,
+    // since the source-of-truth (the wallet entry) is now gone.
+    for (final debt in _debts) {
+      final before = debt.payments.length;
+      debt.payments.removeWhere(
+        (p) =>
+            p.linkedWalletTxnId != null &&
+            removedTxnIds.contains(p.linkedWalletTxnId),
+      );
+      if (debt.payments.length != before) {
+        await storage.saveDebt(debt);
+      }
     }
     _refresh();
     notifyListeners();

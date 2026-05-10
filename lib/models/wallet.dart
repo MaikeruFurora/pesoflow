@@ -37,6 +37,10 @@ class Wallet {
   WalletCategory category;
   String emoji;
   int colorValue;
+
+  /// Optional second color for a gradient. 0 means "use a darker shade of
+  /// colorValue" (single-color mode).
+  int colorValue2;
   double openingBalance;
   String notes;
   DateTime createdAt;
@@ -55,6 +59,7 @@ class Wallet {
     this.category = WalletCategory.bank,
     this.emoji = '💳',
     this.colorValue = 0xFF2BB3A4,
+    this.colorValue2 = 0,
     this.openingBalance = 0,
     this.notes = '',
     DateTime? createdAt,
@@ -71,6 +76,7 @@ class Wallet {
         'category': category.name,
         'emoji': emoji,
         'colorValue': colorValue,
+        'colorValue2': colorValue2,
         'openingBalance': openingBalance,
         'notes': notes,
         'createdAt': createdAt.toIso8601String(),
@@ -90,6 +96,7 @@ class Wallet {
         ),
         emoji: j['emoji'] as String? ?? '💳',
         colorValue: j['colorValue'] as int? ?? 0xFF2BB3A4,
+        colorValue2: j['colorValue2'] as int? ?? 0,
         openingBalance: (j['openingBalance'] as num?)?.toDouble() ?? 0,
         notes: j['notes'] as String? ?? '',
         createdAt: DateTime.parse(j['createdAt'] as String),

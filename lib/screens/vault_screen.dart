@@ -127,6 +127,9 @@ class _VaultWalletCard extends StatelessWidget {
     final state = context.watch<AppState>();
     final balance = state.walletBalance(wallet.id);
     final color = Color(wallet.colorValue);
+    final color2 = wallet.colorValue2 == 0
+        ? color.withOpacity(0.7)
+        : Color(wallet.colorValue2);
     return SoftCard(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => WalletDetailScreen(walletId: wallet.id),
@@ -138,7 +141,11 @@ class _VaultWalletCard extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.16),
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.18), color2.withOpacity(0.18)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(

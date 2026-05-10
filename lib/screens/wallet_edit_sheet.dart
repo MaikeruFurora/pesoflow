@@ -54,6 +54,8 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
   late final TextEditingController _account;
   late String _emoji;
   late int _color;
+  /// 0 = use a darker shade of [_color] (single-color mode).
+  late int _color2;
   late WalletCategory _category;
 
   /// Persisted-on-disk QR filename — what's saved or being kept on save.
@@ -86,6 +88,7 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
     _account = TextEditingController(text: w?.accountNumber ?? '');
     _emoji = w?.emoji ?? '💳';
     _color = w?.colorValue ?? _colorChoices.first;
+    _color2 = w?.colorValue2 ?? 0;
     _category = w?.category ?? WalletCategory.bank;
     _qrFileName = w?.qrFileName ?? '';
     _walletId = w?.id ?? const Uuid().v4();
@@ -199,6 +202,7 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
         category: _category,
         emoji: _emoji,
         colorValue: _color,
+        colorValue2: _color2,
         openingBalance: opening,
         notes: _notes.text.trim(),
         isVault: widget.asVault,
@@ -210,6 +214,7 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
         ..name = name
         ..emoji = _emoji
         ..colorValue = _color
+        ..colorValue2 = _color2
         ..category = _category
         ..openingBalance = opening
         ..notes = _notes.text.trim()
@@ -282,7 +287,7 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
               }).toList(),
             ),
             const SizedBox(height: 16),
-            const Text('Color',
+            const Text('Primary color',
                 style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
             Wrap(
@@ -290,8 +295,45 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
               runSpacing: 12,
               children: _colorChoices.map((c) {
                 final selected = _color == c;
-                return GestureDetector(
+                return _ColorDot(
+                  color: Color(c),
+                  selected: selected,
                   onTap: () => setState(() => _color = c),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Text('Second color',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Color(_color).withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _color2 == 0 ? 'Solid' : 'Gradient',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(_color),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                // "None" → use a darker shade of primary
+                GestureDetector(
+                  onTap: () => setState(() => _color2 = 0),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     width: 36,
@@ -300,32 +342,65 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: selected ? Color(c) : Colors.transparent,
+                        color: _color2 == 0
+                            ? Color(_color)
+                            : Colors.transparent,
                         width: 2,
                       ),
                     ),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Color(c),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.08),
                         shape: BoxShape.circle,
-                        boxShadow: selected
-                            ? [
-                                BoxShadow(
-                                  color: Color(c).withOpacity(0.5),
-                                  blurRadius: 8,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                            : null,
                       ),
-                      child: selected
-                          ? const Icon(Icons.check_rounded,
-                              color: Colors.white, size: 16)
-                          : null,
+                      child: Icon(
+                        Icons.block_rounded,
+                        size: 16,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.45),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
+                ),
+                ..._colorChoices.where((c) => c != _color).map((c) {
+                  final selected = _color2 == c;
+                  return _ColorDot(
+                    color: Color(c),
+                    selected: selected,
+                    onTap: () => setState(() => _color2 = c),
+                  );
+                }),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Live gradient preview
+            Container(
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(_color),
+                    _color2 == 0
+                        ? Color(_color).withOpacity(0.7)
+                        : Color(_color2),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(_color).withOpacity(0.30),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 18),
             TextField(
@@ -413,6 +488,57 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
                   : Text(isEdit ? 'Save changes' : 'Create wallet'),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ColorDot extends StatelessWidget {
+  const _ColorDot({
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 36,
+        height: 36,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: selected ? color : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.5),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                : null,
+          ),
+          child: selected
+              ? const Icon(Icons.check_rounded,
+                  color: Colors.white, size: 16)
+              : null,
         ),
       ),
     );

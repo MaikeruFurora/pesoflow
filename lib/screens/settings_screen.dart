@@ -14,6 +14,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/soft_card.dart';
 import 'onboarding_screen.dart';
+import 'pin_prompt_screen.dart';
 import 'tour_screen.dart';
 import 'vault_unlock_screen.dart';
 
@@ -136,9 +137,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _changePin() async {
+    final auth = context.read<AuthService>();
+    final verified = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PinPromptScreen(
+          title: 'Confirm current PIN',
+          subtitle:
+              'Enter your existing 6-digit PIN to set a new one.',
+          iconData: Icons.password_rounded,
+          verify: (pin) => auth.verifyPin(pin),
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+    if (verified != true || !mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OnboardingScreen(
+          onDone: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmRemoveVault() async {
     final auth = context.read<AuthService>();
     final state = context.read<AppState>();
+
+    // Step 1 — verify vault PIN before going anywhere near a destructive
+    // dialog. This prevents someone with passing access to the unlocked app
+    // from wiping the vault.
+    final verified = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PinPromptScreen(
+          title: 'Confirm vault PIN',
+          subtitle:
+              'Enter your 6-digit vault PIN to remove the vault and unhide its wallets.',
+          errorText: 'Wrong vault PIN.',
+          iconData: Icons.shield_outlined,
+          iconGradient: const [Color(0xFF1F2A44), Color(0xFF2C3E72)],
+          verify: (pin) => auth.verifyVaultPin(pin),
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+    if (verified != true || !mounted) return;
 
     final ok = await showDialog<bool>(
       context: context,
@@ -321,11 +365,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.primary),
                   title: const Text('Change PIN'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => OnboardingScreen(
-                      onDone: () => Navigator.of(context).pop(),
-                    ),
-                  )),
+                  onTap: _changePin,
                 ),
               ],
             ),

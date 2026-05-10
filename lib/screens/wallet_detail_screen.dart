@@ -28,12 +28,14 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final wallet =
-        state.wallets.where((w) => w.id == widget.walletId).firstOrNull;
+    final wallet = state.walletById(widget.walletId);
     if (wallet == null) {
       return const Scaffold(body: Center(child: Text('Wallet removed')));
     }
     final color = Color(wallet.colorValue);
+    final color2 = wallet.colorValue2 == 0
+        ? color.withOpacity(0.7)
+        : Color(wallet.colorValue2);
     final balance = state.walletBalance(widget.walletId);
 
     final allTxns = state.walletTxnsFor(widget.walletId);
@@ -75,7 +77,7 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
         children: [
           SoftCard(
             gradient: LinearGradient(
-              colors: [color, color.withOpacity(0.7)],
+              colors: [color, color2],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

@@ -34,7 +34,16 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async {
+            await context.read<AppState>().reload();
+            // Small delay so the spinner is visible even on instant reloads,
+            // giving the user a clear "refreshed" cue.
+            await Future<void>.delayed(const Duration(milliseconds: 350));
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
           children: [
             Row(
@@ -183,6 +192,9 @@ class DashboardScreen extends StatelessWidget {
                   itemBuilder: (context, i) {
                     final w = state.wallets[i];
                     final color = Color(w.colorValue);
+                    final color2 = w.colorValue2 == 0
+                        ? color.withOpacity(0.75)
+                        : Color(w.colorValue2);
                     return SizedBox(
                       width: 200,
                       child: SoftCard(
@@ -193,7 +205,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ),
                         gradient: LinearGradient(
-                          colors: [color, color.withOpacity(0.75)],
+                          colors: [color, color2],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -317,6 +329,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _RecentActivity(),
           ],
+          ),
         ),
       ),
     );
