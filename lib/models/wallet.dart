@@ -43,6 +43,11 @@ class Wallet {
   int sortOrder;
   bool archived;
   bool isVault;
+  String accountNumber;
+
+  /// Filename of the QR image stored in app docs (under wallet_qr/), e.g.
+  /// "<walletId>.jpg". Empty string when no QR is attached.
+  String qrFileName;
 
   Wallet({
     required this.id,
@@ -56,6 +61,8 @@ class Wallet {
     this.sortOrder = 0,
     this.archived = false,
     this.isVault = false,
+    this.accountNumber = '',
+    this.qrFileName = '',
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -70,6 +77,8 @@ class Wallet {
         'sortOrder': sortOrder,
         'archived': archived,
         'isVault': isVault,
+        'accountNumber': accountNumber,
+        'qrFileName': qrFileName,
       };
 
   factory Wallet.fromJson(Map<String, dynamic> j) => Wallet(
@@ -87,6 +96,8 @@ class Wallet {
         sortOrder: j['sortOrder'] as int? ?? 0,
         archived: j['archived'] as bool? ?? false,
         isVault: j['isVault'] as bool? ?? false,
+        accountNumber: j['accountNumber'] as String? ?? '',
+        qrFileName: j['qrFileName'] as String? ?? '',
       );
 
   String toRawJson() => jsonEncode(toJson());

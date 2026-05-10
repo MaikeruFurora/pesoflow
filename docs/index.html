@@ -769,6 +769,133 @@ footer .dev .badge {
   .lb-prev { left: 8px; }
   .lb-next { right: 8px; }
 }
+
+/* ---------------- Older versions ---------------- */
+.versions {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F4F8 100%);
+  border-top: 1px solid rgba(15, 26, 73, 0.06);
+}
+.versions-list {
+  max-width: 720px;
+  margin: 0 auto;
+  display: grid;
+  gap: 10px;
+}
+.version-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 26, 73, 0.06);
+  transition: border-color 150ms ease, transform 150ms ease,
+    box-shadow 150ms ease;
+}
+.version-row:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 26, 73, 0.06);
+}
+.version-tag {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: var(--primary-soft);
+  border-radius: 14px;
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+.version-tag.current {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+.version-tag .vlbl { font-size: 9px; letter-spacing: 0.6px; opacity: 0.8; text-transform: uppercase; }
+.version-tag .vnum { font-size: 14px; line-height: 1.1; margin-top: 2px; }
+.version-row .meta { min-width: 0; }
+.version-row .meta .title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.version-row .meta .title .pill {
+  padding: 2px 8px;
+  background: var(--primary);
+  color: white;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.version-row .meta .notes {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-soft);
+  line-height: 1.45;
+  max-width: 460px;
+}
+.version-row .meta .size {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-soft);
+}
+.version-row .actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.version-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  background: var(--primary);
+  color: white;
+  transition: background 120ms ease;
+}
+.version-btn:hover { background: var(--primary-dark); }
+.version-btn.secondary {
+  background: white;
+  color: var(--text);
+  border: 1px solid rgba(15, 26, 73, 0.10);
+}
+.version-btn.secondary:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+.versions-warning {
+  max-width: 720px;
+  margin: 18px auto 0;
+  padding: 12px 16px;
+  background: rgba(245, 194, 107, 0.18);
+  border: 1px solid rgba(245, 194, 107, 0.4);
+  border-radius: 14px;
+  font-size: 12px;
+  color: #6E4500;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .version-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .version-row .actions {
+    justify-content: flex-end;
+  }
+}
 </style>
 </head>
 <body>
@@ -785,6 +912,7 @@ footer .dev .badge {
       <a href="#gallery">Screenshots</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
+      <a href="#versions">Versions</a>
       <a href="#download" class="nav-cta">Get the app</a>
     </nav>
   </div>
@@ -905,6 +1033,12 @@ footer .dev .badge {
         <div class="feature-icon fi-red">👁️</div>
         <h3>Hide balances</h3>
         <p>One tap on the eye icon replaces every amount in the app with ••••••. Perfect for showing your screen to a friend without exposing your balance.</p>
+      </div>
+
+      <div class="feature reveal" style="grid-column: span 2;">
+        <div class="feature-icon fi-teal">📲</div>
+        <h3>QR codes & account numbers — all in one place</h3>
+        <p>Save your GCash, Maya, BDO QR codes once and keep them inside PesoFlow. Pick from gallery, crop to a perfect square, then tap any wallet to expand its QR fullscreen for someone to scan. Account numbers copy to clipboard with a single tap. No more digging through banking apps just to receive money.</p>
       </div>
     </div>
   </div>
@@ -1097,6 +1231,59 @@ footer .dev .badge {
         <summary>How do I install the APK?</summary>
         <p>Download the APK to your Android phone, tap it in your file manager. Android will ask you to allow "Install unknown apps" once for your browser/file manager — that's normal for any app installed outside the Play Store.</p>
       </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OLDER VERSIONS ============ -->
+<section class="versions" id="versions">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">📦 Past versions</span>
+      <h2>Need an older build?</h2>
+      <p>Every release stays available here. The latest is always the recommended one.</p>
+    </div>
+
+    <div class="versions-list">
+      <div class="version-row reveal">
+        <div class="version-tag current">
+          <span class="vlbl">Latest</span>
+          <span class="vnum">v1.2.0</span>
+        </div>
+        <div class="meta">
+          <div class="title">
+            PesoFlow v1.2.0
+            <span class="pill">CURRENT</span>
+          </div>
+          <div class="notes">Date filter for debt payment history. Status filter chips on the Debt Tracker. Dynamic version readout in Settings.</div>
+          <div class="size">~23 MB · Android 7.0+</div>
+        </div>
+        <div class="actions">
+          <a class="version-btn" href="./peso-flow.apk" download>⬇️ Download</a>
+        </div>
+      </div>
+
+      <div class="version-row reveal">
+        <div class="version-tag">
+          <span class="vlbl">v1.0</span>
+          <span class="vnum">v1.0.0</span>
+        </div>
+        <div class="meta">
+          <div class="title">PesoFlow v1.0.0</div>
+          <div class="notes">Initial public release — wallets, ipon goals, debt tracker, secret vault, smart search, savings jar, biometric/PIN lock.</div>
+          <div class="size">~23 MB · Android 7.0+</div>
+        </div>
+        <div class="actions">
+          <a class="version-btn secondary" href="./peso-flow-v1.0.0.apk" download>⬇️ Download</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="versions-warning reveal">
+      <span style="font-size: 16px; line-height: 1;">⚠️</span>
+      <div>
+        <strong>Heads up about downgrades.</strong> If you're on a newer version and install an older one, Android will require you to <strong>uninstall first</strong>, which wipes your data. Use <em>Settings → Backup → Export</em> first if you want to keep it.
+      </div>
     </div>
   </div>
 </section>

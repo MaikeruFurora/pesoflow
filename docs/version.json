@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "versionCode": 3,
+  "version": "1.3.0",
+  "versionCode": 4,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Date filter for debt payment history. Status filter chips on the Debt Tracker (All / Overdue / Due soon / On track / Paid). Dynamic version readout in Settings → About."
+  "notes": "Wallet QR codes + account numbers. Pick from gallery, crop to a perfect square, tap to expand fullscreen for scanning. One-tap copy on account numbers."
 }

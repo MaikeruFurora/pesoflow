@@ -7,6 +7,7 @@ import '../models/txn_entry.dart';
 import '../models/wallet.dart';
 import '../models/wallet_txn.dart';
 import '../services/storage_service.dart';
+import '../services/wallet_asset_service.dart';
 
 class AppState extends ChangeNotifier {
   AppState(this.storage) {
@@ -302,6 +303,7 @@ class AppState extends ChangeNotifier {
   double get netWorth => totalAssets - totalIOwe;
 
   Future<Wallet> addWallet({
+    String? id,
     required String name,
     required WalletCategory category,
     String emoji = '💳',
@@ -309,9 +311,11 @@ class AppState extends ChangeNotifier {
     double openingBalance = 0,
     String notes = '',
     bool isVault = false,
+    String accountNumber = '',
+    String qrFileName = '',
   }) async {
     final w = Wallet(
-      id: _uuid.v4(),
+      id: id ?? _uuid.v4(),
       name: name,
       category: category,
       emoji: emoji,
@@ -320,6 +324,8 @@ class AppState extends ChangeNotifier {
       notes: notes,
       sortOrder: _wallets.length,
       isVault: isVault,
+      accountNumber: accountNumber,
+      qrFileName: qrFileName,
     );
     await storage.saveWallet(w);
     _refresh();
@@ -336,6 +342,7 @@ class AppState extends ChangeNotifier {
   Future<void> deleteWallet(String id) async {
     await storage.deleteWallet(id);
     await storage.deleteWalletTxnsForWallet(id);
+    await WalletAssetService().deleteForWallet(id);
     _refresh();
     notifyListeners();
   }

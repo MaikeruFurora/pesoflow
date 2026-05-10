@@ -10,6 +10,7 @@ import '../widgets/date_filter.dart';
 import '../widgets/money_text.dart';
 import '../widgets/row_actions.dart';
 import '../widgets/soft_card.dart';
+import '../widgets/wallet_receive_card.dart';
 import 'transfer_sheet.dart';
 import 'wallet_edit_sheet.dart';
 import 'wallet_txn_sheet.dart';
@@ -102,6 +103,11 @@ class _WalletDetailScreenState extends State<WalletDetailScreen> {
               ],
             ),
           ),
+          if (wallet.qrFileName.isNotEmpty ||
+              wallet.accountNumber.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            WalletReceiveCard(wallet: wallet),
+          ],
           if (wallet.notes.isNotEmpty) ...[
             const SizedBox(height: 12),
             SoftCard(
