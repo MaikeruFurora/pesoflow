@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
-  "versionCode": 2,
+  "version": "1.2.0",
+  "versionCode": 3,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Debt detail screen with payment history + CRUD. Visual jar redesign on a clean light background. Polished edit/delete actions and AppBar buttons."
+  "notes": "Date filter for debt payment history. Status filter chips on the Debt Tracker (All / Overdue / Due soon / On track / Paid). Dynamic version readout in Settings → About."
 }

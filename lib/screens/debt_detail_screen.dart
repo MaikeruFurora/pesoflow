@@ -5,14 +5,23 @@ import 'package:provider/provider.dart';
 import '../models/debt.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/date_filter.dart';
 import '../widgets/money_text.dart';
 import '../widgets/row_actions.dart';
 import '../widgets/soft_card.dart';
 import 'debt_edit_sheet.dart';
 
-class DebtDetailScreen extends StatelessWidget {
+class DebtDetailScreen extends StatefulWidget {
   const DebtDetailScreen({super.key, required this.debtId});
   final String debtId;
+
+  @override
+  State<DebtDetailScreen> createState() => _DebtDetailScreenState();
+}
+
+class _DebtDetailScreenState extends State<DebtDetailScreen> {
+  DateFilter _filter = const DateFilter();
+  String get debtId => widget.debtId;
 
   Color _statusColor(DebtStatus s) {
     switch (s) {
@@ -54,8 +63,10 @@ class DebtDetailScreen extends StatelessWidget {
         : (debt.totalPaid / debt.originalAmount).clamp(0.0, 1.0);
     final statusColor = _statusColor(debt.status);
 
-    final payments = [...debt.payments]
+    final allPayments = [...debt.payments]
       ..sort((a, b) => b.date.compareTo(a.date));
+    final payments =
+        allPayments.where((p) => _filter.includes(p.date)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -251,22 +262,58 @@ class DebtDetailScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Text(
-                payments.isEmpty
-                    ? 'Payment history'
-                    : 'Payment history (${payments.length})',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 16),
+              const Expanded(
+                child: Text(
+                  'Payment history',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 16),
+                ),
               ),
+              if (allPayments.isNotEmpty)
+                Text(
+                  payments.length == allPayments.length
+                      ? '${allPayments.length} total'
+                      : '${payments.length} of ${allPayments.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.55),
+                  ),
+                ),
             ],
           ),
+          if (allPayments.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            DateFilterBar(
+              value: _filter,
+              onChanged: (f) => setState(() => _filter = f),
+            ),
+          ],
           const SizedBox(height: 10),
-          if (payments.isEmpty)
+          if (allPayments.isEmpty)
             SoftCard(
               padding: const EdgeInsets.all(22),
               child: Center(
                 child: Text(
                   'No payments yet — record one to start tracking.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
+                  ),
+                ),
+              ),
+            )
+          else if (payments.isEmpty)
+            SoftCard(
+              padding: const EdgeInsets.all(22),
+              child: Center(
+                child: Text(
+                  'No payments in this range.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Theme.of(context)

@@ -20,11 +20,17 @@ class _DebtsScreenState extends State<DebtsScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 2, vsync: this);
 
+  // null = "All"; otherwise filter by this single status
+  DebtStatus? _statusFilter;
+
   @override
   void dispose() {
     _tabs.dispose();
     super.dispose();
   }
+
+  bool _matches(Debt d) =>
+      _statusFilter == null || d.status == _statusFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +40,8 @@ class _DebtsScreenState extends State<DebtsScreen>
         .toList();
     final iOwe =
         state.debts.where((d) => d.direction == DebtDirection.iOwe).toList();
+    final owedFiltered = owed.where(_matches).toList();
+    final iOweFiltered = iOwe.where(_matches).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -55,8 +63,8 @@ class _DebtsScreenState extends State<DebtsScreen>
               .withOpacity(0.55),
           labelStyle: const TextStyle(fontWeight: FontWeight.w700),
           tabs: [
-            Tab(text: 'Owed to me (${owed.length})'),
-            Tab(text: 'I owe (${iOwe.length})'),
+            Tab(text: 'Owed to me (${owedFiltered.length})'),
+            Tab(text: 'I owe (${iOweFiltered.length})'),
           ],
         ),
       ),
@@ -86,16 +94,163 @@ class _DebtsScreenState extends State<DebtsScreen>
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: _StatusFilterBar(
+              value: _statusFilter,
+              onChanged: (s) => setState(() => _statusFilter = s),
+              counts: _countsByStatus([...owed, ...iOwe]),
+            ),
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabs,
               children: [
-                _DebtList(debts: owed),
-                _DebtList(debts: iOwe),
+                _DebtList(debts: owedFiltered),
+                _DebtList(debts: iOweFiltered),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Map<DebtStatus, int> _countsByStatus(List<Debt> all) {
+    final m = <DebtStatus, int>{};
+    for (final d in all) {
+      m[d.status] = (m[d.status] ?? 0) + 1;
+    }
+    return m;
+  }
+}
+
+class _StatusFilterBar extends StatelessWidget {
+  const _StatusFilterBar({
+    required this.value,
+    required this.onChanged,
+    required this.counts,
+  });
+
+  final DebtStatus? value;
+  final ValueChanged<DebtStatus?> onChanged;
+  final Map<DebtStatus, int> counts;
+
+  static const _statusOrder = [
+    DebtStatus.overdue,
+    DebtStatus.dueSoon,
+    DebtStatus.upcoming,
+    DebtStatus.paid,
+  ];
+
+  Color _color(DebtStatus s) {
+    switch (s) {
+      case DebtStatus.paid:
+        return AppColors.success;
+      case DebtStatus.upcoming:
+        return AppColors.success;
+      case DebtStatus.dueSoon:
+        return AppColors.warning;
+      case DebtStatus.overdue:
+        return AppColors.danger;
+    }
+  }
+
+  String _label(DebtStatus s) {
+    switch (s) {
+      case DebtStatus.paid:
+        return 'Paid';
+      case DebtStatus.upcoming:
+        return 'On track';
+      case DebtStatus.dueSoon:
+        return 'Due soon';
+      case DebtStatus.overdue:
+        return 'Overdue';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          _Chip(
+            label: 'All',
+            selected: value == null,
+            color: AppColors.primary,
+            onTap: () => onChanged(null),
+          ),
+          ..._statusOrder.map((s) {
+            final n = counts[s] ?? 0;
+            return Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: _Chip(
+                label: n == 0 ? _label(s) : '${_label(s)} ($n)',
+                color: _color(s),
+                selected: value == s,
+                onTap: () => onChanged(s),
+                showDot: true,
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+    this.showDot = false,
+  });
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  final bool showDot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? color : color.withOpacity(0.12),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showDot) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? Colors.white : color,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? Colors.white : color,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
