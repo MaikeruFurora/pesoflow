@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import '../services/auth_service.dart';
 import '../services/backup_service.dart';
 import '../services/storage_service.dart';
+import '../services/update_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/soft_card.dart';
@@ -48,6 +49,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _bioAvailable = ok;
         _bioError = err;
       });
+    }
+  }
+
+  bool _checkingUpdate = false;
+
+  Future<void> _checkForUpdate() async {
+    setState(() => _checkingUpdate = true);
+    final svc = UpdateService();
+    final info = await svc.check();
+    if (!mounted) return;
+    setState(() => _checkingUpdate = false);
+
+    if (info == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                "Couldn't reach the update server. Check your connection.")),
+      );
+      return;
+    }
+    if (!info.hasUpdate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              "You're on the latest version (v${info.currentVersion}).") ,
+        ),
+      );
+      return;
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Update to v${info.latestVersion}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You\'re on v${info.currentVersion}. A newer version is available.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface
+                    .withOpacity(0.7),
+                fontSize: 13,
+              ),
+            ),
+            if (info.notes?.isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              Text(
+                info.notes!,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Download'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await svc.openUpdateLink(info.url);
     }
   }
 
@@ -333,6 +403,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: _busyBackup ? null : _importBackup,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _Header(text: 'Updates'),
+          SoftCard(
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.system_update_alt_rounded,
+                  color: AppColors.primary),
+              title: const Text('Check for updates'),
+              subtitle: const Text('Looks for a newer release on the website'),
+              trailing: _checkingUpdate
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.chevron_right),
+              onTap: _checkingUpdate ? null : _checkForUpdate,
             ),
           ),
           const SizedBox(height: 16),

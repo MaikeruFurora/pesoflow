@@ -9,6 +9,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/money_text.dart';
 import '../widgets/soft_card.dart';
+import '../widgets/update_banner.dart';
 import 'goal_detail_screen.dart';
 import 'search_screen.dart';
 import 'wallet_detail_screen.dart';
@@ -104,7 +105,8 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            const UpdateBanner(),
             _NetWorthCard(
               assets: state.totalAssets,
               netWorth: state.netWorth,
