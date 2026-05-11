@@ -3,9 +3,7 @@
 > Save smart. Stay secure.
 
 PesoFlow is a private, on-device Filipino savings app that helps you track every peso across your wallets, ipon goals, and debts — without an account, without the cloud.
-
-![PesoFlow Banner](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/3.jpg)
-
+ 
 ---
 
 ## ✨ Features
