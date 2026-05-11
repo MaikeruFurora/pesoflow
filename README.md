@@ -17,9 +17,9 @@ samples, guidance on mobile development, and a full API reference.
  
 # Screenshots
 
-![Screenshot 1](main/android/docs/img/1.jpg)
-![Screenshot 2](android/docs/img/2.jpg)
-![Screenshot 3](android/docs/img/3.jpg)
-![Screenshot 4](android/docs/img/4.jpg)
-![Screenshot 5](android/docs/img/5.jpg)
-![Screenshot 6](android/docs/img/6.jpg)
+![Screenshot 1](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/1.jpg)
+![Screenshot 2](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/2.jpg)
+![Screenshot 3](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/3.jpg)
+![Screenshot 4](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/4.jpg)
+![Screenshot 5](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/5.jpg)
+![Screenshot 6](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/6.jpg) 
