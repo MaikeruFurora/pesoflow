@@ -24,5 +24,7 @@ samples, guidance on mobile development, and a full API reference.
   <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/4.jpg" width="200" />
   <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/5.jpg" width="200" />
   <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/6.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/7.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/8.jpg" width="200" />
 </p>
 
