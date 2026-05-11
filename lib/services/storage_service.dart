@@ -133,4 +133,12 @@ class StorageService {
       ..add(peso);
     await settings.put('assetMilestones', raw.toList());
   }
+
+  /// Highest update-build that the user has explicitly acknowledged or
+  /// dismissed. The Update banner uses this to stay hidden until a strictly
+  /// newer build is published.
+  int get acknowledgedUpdateBuild =>
+      (settings.get('acknowledgedUpdateBuild') as int?) ?? 0;
+  set acknowledgedUpdateBuild(int v) =>
+      settings.put('acknowledgedUpdateBuild', v);
 }

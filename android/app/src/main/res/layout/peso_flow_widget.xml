@@ -1,99 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@drawable/widget_bg">
+    android:padding="6dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="PesoFlow"
-        android:textSize="12sp"
-        android:textColor="#A5F3FC"
-        android:textStyle="bold"
-        android:letterSpacing="0.08" />
-
-    <TextView
-        android:id="@+id/widget_assets"
+    <!-- Card body -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="₱ 0"
-        android:textSize="22sp"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold" />
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_card_bg">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Total assets"
-        android:textSize="11sp"
-        android:textColor="#B6F8D0"
-        android:layout_marginBottom="8dp" />
+        <!-- Decorative diagonal sheen overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_card_sheen" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="2">
-
+        <!-- Top bar -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Logo block -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="↙ Owed to me"
-                android:textSize="10sp"
-                android:textColor="#B6F8D0" />
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/widget_owedtome"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₱ 0"
-                android:textSize="14sp"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₱"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/widget_logo_badge"
+                    android:gravity="center"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="1dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:text="PesoFlow"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.04" />
+            </LinearLayout>
+
+            <!-- Chip / contactless icon stack on the right -->
+            <View
+                android:layout_width="28dp"
+                android:layout_height="20dp"
+                android:background="@drawable/widget_chip" />
         </LinearLayout>
 
+        <!-- Main amount block -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="44dp"
+            android:paddingBottom="0dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="↗ I owe"
-                android:textSize="10sp"
-                android:textColor="#FFC0BD" />
+                android:text="TOTAL ASSETS"
+                android:textColor="#A5F3FC"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.18" />
 
             <TextView
-                android:id="@+id/widget_iowe"
-                android:layout_width="wrap_content"
+                android:id="@+id/widget_assets"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="₱ 0"
-                android:textSize="14sp"
                 android:textColor="#FFFFFF"
-                android:textStyle="bold" />
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:shadowColor="#33000000"
+                android:shadowDx="0"
+                android:shadowDy="1"
+                android:shadowRadius="4" />
         </LinearLayout>
-    </LinearLayout>
 
-    <TextView
-        android:id="@+id/widget_updated"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text=""
-        android:textSize="9sp"
-        android:textColor="#80FFFFFF" />
+        <!-- Bottom strip: I owe / Owed to me -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-</LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="↙  OWED TO ME"
+                        android:textColor="#B6F8D0"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.10" />
+
+                    <TextView
+                        android:id="@+id/widget_owedtome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₱ 0"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="↗  I OWE"
+                        android:textColor="#FFC0BD"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.10" />
+
+                    <TextView
+                        android:id="@+id/widget_iowe"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="₱ 0"
+                        android:textColor="#FFFFFF"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/widget_updated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text=""
+                android:textColor="#80FFFFFF"
+                android:textSize="9sp"
+                android:letterSpacing="0.04" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

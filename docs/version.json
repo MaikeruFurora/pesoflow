@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
-  "versionCode": 8,
+  "version": "1.7.1",
+  "versionCode": 9,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Home-screen widget (total assets, I owe, owed to me), notifications for debt due dates / goal milestones / net-worth milestones, wallet balance guard on debt entries, debt page redesign (totals on top), and dual-icon goals."
+  "notes": "Debit-card widget redesign, update banner respects your dismissal, tap wallet chips in debts to jump to that wallet (with live balance), and locked-down 'Add money' on completed goals."
 }

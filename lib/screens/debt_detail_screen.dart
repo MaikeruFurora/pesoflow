@@ -10,6 +10,7 @@ import '../widgets/money_text.dart';
 import '../widgets/row_actions.dart';
 import '../widgets/soft_card.dart';
 import 'debt_edit_sheet.dart';
+import 'wallet_detail_screen.dart';
 
 class DebtDetailScreen extends StatefulWidget {
   const DebtDetailScreen({super.key, required this.debtId});
@@ -227,24 +228,30 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
           if (debt.walletId != null) ...[
             const SizedBox(height: 12),
             Builder(builder: (context) {
-              final w = context
-                  .read<AppState>()
-                  .walletById(debt.walletId!);
+              final appState = context.read<AppState>();
+              final w = appState.walletById(debt.walletId!);
               if (w == null) return const SizedBox.shrink();
               final wColor = Color(w.colorValue);
+              final balance = appState.walletBalance(w.id);
               return SoftCard(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        WalletDetailScreen(walletId: w.id),
+                  ),
+                ),
                 child: Row(
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: wColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
                         child: Text(w.emoji,
-                            style: const TextStyle(fontSize: 18)),
+                            style: const TextStyle(fontSize: 20)),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -257,20 +264,42 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
                                 ? 'Lent from ${w.name}'
                                 : 'Received to ${w.name}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 13),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13),
                           ),
-                          Text(
-                            'Principal mirrors a wallet transaction',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.55),
-                            ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text(
+                                'Current balance · ',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.55),
+                                ),
+                              ),
+                              MoneyText(
+                                balance,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: wColor,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.4),
                     ),
                   ],
                 ),
@@ -475,34 +504,58 @@ class _PaymentRow extends StatelessWidget {
                 if (payment.walletId != null) ...[
                   const SizedBox(height: 4),
                   Builder(builder: (context) {
-                    final w = context
-                        .read<AppState>()
-                        .wallets
-                        .where((x) => x.id == payment.walletId)
-                        .firstOrNull;
+                    final appState = context.read<AppState>();
+                    final w = appState.walletById(payment.walletId!);
                     if (w == null) return const SizedBox.shrink();
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Color(w.colorValue).withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(8),
+                    final wColor = Color(w.colorValue);
+                    final balance = appState.walletBalance(w.id);
+                    return InkWell(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              WalletDetailScreen(walletId: w.id),
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(w.emoji,
-                              style: const TextStyle(fontSize: 11)),
-                          const SizedBox(width: 4),
-                          Text(
-                            w.name,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(w.colorValue),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: wColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(w.emoji,
+                                style: const TextStyle(fontSize: 11)),
+                            const SizedBox(width: 4),
+                            Text(
+                              w.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: wColor,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 1,
+                              height: 10,
+                              color: wColor.withOpacity(0.30),
+                            ),
+                            const SizedBox(width: 6),
+                            MoneyText(
+                              balance,
+                              compact: true,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: wColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }),

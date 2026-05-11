@@ -226,13 +226,17 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => showTransactionSheet(
-                    context,
-                    goalId: goalId,
-                    type: TxnType.deposit,
-                  ),
+                  onPressed: goal.completedAt != null
+                      ? null
+                      : () => showTransactionSheet(
+                            context,
+                            goalId: goalId,
+                            type: TxnType.deposit,
+                          ),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add money'),
+                  label: Text(goal.completedAt != null
+                      ? 'Goal reached'
+                      : 'Add money'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -256,6 +260,35 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               ),
             ],
           ),
+          if (goal.completedAt != null && goal.targetAmount != null) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 14,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.55)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'You\'ve hit your target. Raise the goal amount to keep saving, or withdraw what you need.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 22),
           Row(
             children: [

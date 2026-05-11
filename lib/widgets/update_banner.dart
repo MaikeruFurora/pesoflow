@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../theme/app_theme.dart';
 
@@ -28,9 +30,18 @@ class _UpdateBannerState extends State<UpdateBanner> {
   Future<void> _check() async {
     final info = await _service.check();
     if (!mounted) return;
-    if (info != null && info.hasUpdate) {
-      setState(() => _info = info);
-    }
+    if (info == null || !info.hasUpdate) return;
+    // Hide if the user already acknowledged this exact build (either by
+    // dismissing the banner or tapping Download). The flag is reset only
+    // when the website publishes a strictly newer build.
+    final ack = context.read<StorageService>().acknowledgedUpdateBuild;
+    if (info.latestBuild <= ack) return;
+    setState(() => _info = info);
+  }
+
+  void _acknowledgeAndClose(UpdateInfo info) {
+    context.read<StorageService>().acknowledgedUpdateBuild = info.latestBuild;
+    setState(() => _dismissed = true);
   }
 
   @override
@@ -113,7 +124,7 @@ class _UpdateBannerState extends State<UpdateBanner> {
                 ),
                 IconButton(
                   tooltip: 'Dismiss',
-                  onPressed: () => setState(() => _dismissed = true),
+                  onPressed: () => _acknowledgeAndClose(info),
                   icon: Icon(Icons.close_rounded,
                       color: Colors.white.withOpacity(0.85), size: 18),
                 ),
@@ -136,6 +147,10 @@ class _UpdateBannerState extends State<UpdateBanner> {
           content: Text('Could not open the download link.'),
         ),
       );
+      return;
     }
+    // User chose to download — acknowledge this build so the banner won't
+    // keep reappearing until a strictly newer build is published.
+    _acknowledgeAndClose(info);
   }
 }
