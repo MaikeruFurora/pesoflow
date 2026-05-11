@@ -15,15 +15,11 @@ class PesoFlowWidgetProvider : AppWidgetProvider() {
     ) {
         val prefs = HomeWidgetPlugin.getData(context)
         val assets = prefs.getString("pf_assets", null) ?: "₱ 0"
-        val iOwe = prefs.getString("pf_iowe", null) ?: "₱ 0"
-        val owedToMe = prefs.getString("pf_owedtome", null) ?: "₱ 0"
         val updated = prefs.getString("pf_updated", null) ?: ""
 
         for (id in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.peso_flow_widget)
             views.setTextViewText(R.id.widget_assets, assets)
-            views.setTextViewText(R.id.widget_iowe, iOwe)
-            views.setTextViewText(R.id.widget_owedtome, owedToMe)
             views.setTextViewText(
                 R.id.widget_updated,
                 if (updated.isEmpty()) "Open PesoFlow to sync" else "Updated $updated",

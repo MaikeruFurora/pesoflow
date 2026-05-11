@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cute gold coin with ₱ stamp. Used in a row at the bottom of the widget. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+
+    <!-- Coin shadow -->
+    <path
+        android:fillColor="#33000000"
+        android:pathData="M20,22 m-15,0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0" />
+
+    <!-- Outer rim (darker gold) -->
+    <path
+        android:fillColor="#C48A0E"
+        android:pathData="M20,20 m-15,0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0" />
+
+    <!-- Inner face (bright gold) -->
+    <path
+        android:fillColor="#F5C26B"
+        android:pathData="M20,20 m-12,0 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0" />
+
+    <!-- Highlight -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.55"
+        android:pathData="M14,14 m-3,-2 a4,3 0 1,0 6,0 a4,3 0 1,0 -6,0" />
+
+    <!-- Peso glyph -->
+    <path
+        android:fillColor="#8B6914"
+        android:pathData="M16,13 L16,28 L18.5,28 L18.5,23 L22.5,23 Q26,23 26,20 Q26,17 22.5,17 L18.5,17 L18.5,15 L25,15 L25,13 Z M18.5,19 L22.5,19 Q23.5,19 23.5,20 Q23.5,21 22.5,21 L18.5,21 Z" />
+
+    <!-- Horizontal bar of ₱ -->
+    <path
+        android:fillColor="#8B6914"
+        android:pathData="M14,20 L23,20 L23,21.5 L14,21.5 Z" />
+</vector>

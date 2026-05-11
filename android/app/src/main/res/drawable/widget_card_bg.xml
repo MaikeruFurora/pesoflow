@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Soft cream card with a thin warm border, Duolingo-style. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Deep shadow base -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#06000000" />
+            <solid android:color="#0C000000" />
             <corners android:radius="22dp" />
         </shape>
     </item>
-    <!-- Main gradient card face -->
     <item
         android:left="0dp"
         android:top="0dp"
         android:right="0dp"
         android:bottom="2dp">
         <shape android:shape="rectangle">
-            <gradient
-                android:angle="135"
-                android:startColor="#0E1F49"
-                android:centerColor="#1B3578"
-                android:endColor="#1F8E82"
-                android:type="linear" />
+            <solid android:color="#FFFBF1" />
+            <stroke android:width="1dp" android:color="#F0E5C8" />
             <corners android:radius="22dp" />
         </shape>
     </item>

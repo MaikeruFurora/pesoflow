@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../models/debt.dart';
 import '../models/wallet.dart';
 import '../state/app_state.dart';
-import '../theme/app_theme.dart';
 import '../widgets/money_input.dart';
 import '../widgets/money_text.dart';
 
@@ -690,15 +689,15 @@ class _WalletPickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(wallet.colorValue);
-    final low = balance <= 0;
+    final accent = Color(wallet.colorValue);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return ListTile(
       onTap: onTap,
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.14),
+          color: accent.withOpacity(0.14),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
@@ -710,16 +709,15 @@ class _WalletPickerTile extends StatelessWidget {
         wallet.name,
         style: const TextStyle(fontWeight: FontWeight.w700),
       ),
+      // Keep the picker calm — balance text is plain on-surface so the eye
+      // jumps to the wallet name first, not the number color.
       subtitle: Row(
         children: [
           Text(
             'Balance: ',
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withOpacity(0.55),
+              color: onSurface.withOpacity(0.55),
             ),
           ),
           MoneyText(
@@ -727,13 +725,13 @@ class _WalletPickerTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: low ? AppColors.danger : color,
+              color: onSurface,
             ),
           ),
         ],
       ),
       trailing: selected
-          ? Icon(Icons.check_rounded, size: 20, color: color)
+          ? Icon(Icons.check_rounded, size: 20, color: accent)
           : null,
     );
   }

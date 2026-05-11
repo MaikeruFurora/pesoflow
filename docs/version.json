@@ -1,6 +1,6 @@
 {
-  "version": "1.7.2",
-  "versionCode": 10,
+  "version": "1.7.3",
+  "versionCode": 11,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Home-screen widget now uses fully RemoteViews-safe drawables (fixes 'problem loading widget' on some launchers). Wallet picker inside debt + payment sheets shows each wallet's current balance so you know what you're spending before tapping."
+  "notes": "Widget redesign — cream card with PesoFlow brand + total assets on top, a layered cyan wave at the bottom with three gold ₱ coins resting on it. Wallet picker balance is now plain text (calmer to read)."
 }
