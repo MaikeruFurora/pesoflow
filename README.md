@@ -1,4 +1,4 @@
-# iponlock
+# PesoFlow
 
 A new Flutter project.
 
@@ -19,7 +19,7 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Screenshots
 
-![Screenshot 1](blob/main/docs/img/1.jpg)
+![Screenshot 1](main/android/docs/img/1.jpg)
 ![Screenshot 2](android/docs/img/2.jpg)
 ![Screenshot 3](android/docs/img/3.jpg)
 ![Screenshot 4](android/docs/img/4.jpg)
