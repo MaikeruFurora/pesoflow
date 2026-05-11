@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../models/debt.dart';
 import '../models/wallet.dart';
 import '../state/app_state.dart';
+import '../theme/app_theme.dart';
 import '../widgets/money_input.dart';
+import '../widgets/money_text.dart';
 
 Future<void> showDebtEditSheet(BuildContext context, {Debt? debt}) async {
   await showModalBottomSheet(
@@ -118,6 +120,7 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
   }
 
   Future<void> _pickDebtWallet(List<Wallet> wallets) async {
+    final state = context.read<AppState>();
     final picked = await showModalBottomSheet<String?>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -141,12 +144,10 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
             ),
             const Divider(height: 1),
             ...wallets.map(
-              (w) => ListTile(
-                leading: Text(w.emoji, style: const TextStyle(fontSize: 22)),
-                title: Text(w.name),
-                trailing: _walletId == w.id
-                    ? const Icon(Icons.check, size: 18)
-                    : null,
+              (w) => _WalletPickerTile(
+                wallet: w,
+                balance: state.walletBalance(w.id),
+                selected: _walletId == w.id,
                 onTap: () => Navigator.of(context).pop(w.id),
               ),
             ),
@@ -478,6 +479,7 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
   }
 
   Future<void> _pickWallet(List<Wallet> wallets) async {
+    final state = context.read<AppState>();
     final picked = await showModalBottomSheet<String?>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -501,12 +503,10 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
             ),
             const Divider(height: 1),
             ...wallets.map(
-              (w) => ListTile(
-                leading: Text(w.emoji, style: const TextStyle(fontSize: 22)),
-                title: Text(w.name),
-                trailing: _walletId == w.id
-                    ? const Icon(Icons.check, size: 18)
-                    : null,
+              (w) => _WalletPickerTile(
+                wallet: w,
+                balance: state.walletBalance(w.id),
+                selected: _walletId == w.id,
                 onTap: () => Navigator.of(context).pop(w.id),
               ),
             ),
@@ -668,6 +668,73 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Wallet row used inside the "Choose wallet" bottom sheet. Shows the wallet's
+/// emoji, name, and live current balance so the user knows what they're
+/// committing money from / to before they tap it.
+class _WalletPickerTile extends StatelessWidget {
+  const _WalletPickerTile({
+    required this.wallet,
+    required this.balance,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Wallet wallet;
+  final double balance;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(wallet.colorValue);
+    final low = balance <= 0;
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.14),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(wallet.emoji,
+              style: const TextStyle(fontSize: 22)),
+        ),
+      ),
+      title: Text(
+        wallet.name,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Row(
+        children: [
+          Text(
+            'Balance: ',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.55),
+            ),
+          ),
+          MoneyText(
+            balance,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: low ? AppColors.danger : color,
+            ),
+          ),
+        ],
+      ),
+      trailing: selected
+          ? Icon(Icons.check_rounded, size: 20, color: color)
+          : null,
     );
   }
 }

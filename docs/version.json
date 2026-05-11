@@ -1,6 +1,6 @@
 {
-  "version": "1.7.1",
-  "versionCode": 9,
+  "version": "1.7.2",
+  "versionCode": 10,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Debit-card widget redesign, update banner respects your dismissal, tap wallet chips in debts to jump to that wallet (with live balance), and locked-down 'Add money' on completed goals."
+  "notes": "Home-screen widget now uses fully RemoteViews-safe drawables (fixes 'problem loading widget' on some launchers). Wallet picker inside debt + payment sheets shows each wallet's current balance so you know what you're spending before tapping."
 }
