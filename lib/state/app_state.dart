@@ -6,8 +6,10 @@ import '../models/goal.dart';
 import '../models/txn_entry.dart';
 import '../models/wallet.dart';
 import '../models/wallet_txn.dart';
+import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../services/wallet_asset_service.dart';
+import 'home_widget_sync.dart';
 
 class AppState extends ChangeNotifier {
   AppState(this.storage) {
@@ -71,6 +73,55 @@ class AppState extends ChangeNotifier {
   Future<void> reload() async {
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+  }
+
+  void _pushWidgetSummary() {
+    // Fire-and-forget. Failures are swallowed inside HomeWidgetSync.
+    HomeWidgetSync.push(
+      totalAssets: totalAssets,
+      iOwe: totalIOwe,
+      owedToMe: totalOwedToMe,
+    );
+  }
+
+  // ---- Milestone thresholds ---------------------------------------------
+  static const _goalMilestones = [25, 50, 75, 100];
+  static const _assetMilestones = [
+    10000, 20000, 30000, 50000, 100000, 250000, 500000, 1000000,
+  ];
+
+  Future<void> _checkGoalMilestone(String goalId) async {
+    final g = _goals.firstWhere((x) => x.id == goalId,
+        orElse: () => Goal(id: '', name: ''));
+    if (g.id.isEmpty || g.targetAmount == null || g.targetAmount! <= 0) return;
+    final pct = ((balanceFor(g.id) / g.targetAmount!) * 100).floor();
+    for (final t in _goalMilestones) {
+      if (pct >= t && !g.notifiedMilestones.contains(t)) {
+        g.notifiedMilestones.add(t);
+        await storage.saveGoal(g);
+        await NotificationService.instance.celebrateGoalMilestone(
+          goalId: g.id,
+          goalName: g.name,
+          emoji: g.emoji,
+          percent: t,
+        );
+      }
+    }
+  }
+
+  Future<void> _checkAssetMilestone(double previousAssets) async {
+    final current = totalAssets;
+    if (current <= previousAssets) return;
+    for (final m in _assetMilestones) {
+      if (previousAssets < m && current >= m) {
+        if (!storage.assetMilestoneFired(m)) {
+          await storage.markAssetMilestoneFired(m);
+          await NotificationService.instance
+              .celebrateAssetMilestone(peso: m);
+        }
+      }
+    }
   }
 
   // ----- Hide balances ---------------------------------------------------
@@ -95,6 +146,7 @@ class AppState extends ChangeNotifier {
   Future<Goal> addGoal({
     required String name,
     String emoji = '🎯',
+    String emoji2 = '',
     double? targetAmount,
     String notes = '',
   }) async {
@@ -102,6 +154,7 @@ class AppState extends ChangeNotifier {
       id: _uuid.v4(),
       name: name,
       emoji: emoji,
+      emoji2: emoji2,
       targetAmount: targetAmount,
       notes: notes,
       sortOrder: _goals.length,
@@ -172,6 +225,7 @@ class AppState extends ChangeNotifier {
 
     _refresh();
     notifyListeners();
+    _checkGoalMilestone(goalId);
     return txn;
   }
 
@@ -229,7 +283,19 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _rescheduleDebtReminders(debt);
     return debt;
+  }
+
+  Future<void> _rescheduleDebtReminders(Debt d) async {
+    await NotificationService.instance.scheduleDebtReminders(
+      debtId: d.id,
+      party: d.party,
+      iOwe: d.direction == DebtDirection.iOwe,
+      dueDate: d.dueDate,
+      remaining: d.remaining,
+    );
   }
 
   /// Edit an existing debt. If [walletId] is provided (even as ""/null),
@@ -286,6 +352,8 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _rescheduleDebtReminders(debt);
   }
 
   String _principalTxnNote(Debt debt) =>
@@ -326,8 +394,10 @@ class AppState extends ChangeNotifier {
       }
     }
     await storage.deleteDebt(id);
+    await NotificationService.instance.cancelDebtReminders(id);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
   }
 
   Future<void> addDebtPayment({
@@ -357,6 +427,8 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _rescheduleDebtReminders(debt);
   }
 
   Future<void> updateDebtPayment({
@@ -411,6 +483,8 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _rescheduleDebtReminders(debt);
   }
 
   Future<void> deleteDebtPayment({
@@ -427,6 +501,8 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _rescheduleDebtReminders(debt);
   }
 
   static final WalletTxn _missingTxn = WalletTxn(
@@ -554,6 +630,7 @@ class AppState extends ChangeNotifier {
     String note = '',
     DateTime? date,
   }) async {
+    final prevAssets = totalAssets;
     final t = WalletTxn(
       id: _uuid.v4(),
       walletId: walletId,
@@ -566,6 +643,8 @@ class AppState extends ChangeNotifier {
     await storage.saveWalletTxn(t);
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
+    _checkAssetMilestone(prevAssets);
     return t;
   }
 
@@ -608,6 +687,7 @@ class AppState extends ChangeNotifier {
     }
     _refresh();
     notifyListeners();
+    _pushWidgetSummary();
   }
 
   /// Atomic-ish transfer: writes a transferOut on source and transferIn

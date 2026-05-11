@@ -117,4 +117,20 @@ class StorageService {
 
   String? get vaultPinHash => settings.get('vaultPinHash') as String?;
   set vaultPinHash(String? v) => settings.put('vaultPinHash', v);
+
+  /// Persisted set of asset-milestone pesos already celebrated, so the user
+  /// doesn't get the same congrats twice (e.g. after dipping below ₱10K and
+  /// climbing back over it).
+  bool assetMilestoneFired(int peso) {
+    final raw = (settings.get('assetMilestones') as List?) ?? const [];
+    return raw.contains(peso);
+  }
+
+  Future<void> markAssetMilestoneFired(int peso) async {
+    final raw = ((settings.get('assetMilestones') as List?) ?? const [])
+        .map((e) => e as int)
+        .toSet()
+      ..add(peso);
+    await settings.put('assetMilestones', raw.toList());
+  }
 }

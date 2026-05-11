@@ -66,6 +66,32 @@ class _DebtEditSheetState extends State<_DebtEditSheet> {
         double.tryParse(_amount.text.trim().replaceAll(',', '')) ?? 0;
     if (party.isEmpty || amount <= 0) return;
 
+    // Only "Owed to me" with a linked wallet writes a debit; that's the
+    // case where the wallet could go negative if we're not careful.
+    if (_walletId != null && _direction == DebtDirection.owedToMe) {
+      final balance = state.walletBalance(_walletId!);
+      // For an edit, the existing principal txn (if any on the same wallet)
+      // already contributes to the balance — adjusting only the delta.
+      final priorContribution = (widget.debt?.walletId == _walletId &&
+              widget.debt?.linkedWalletTxnId != null)
+          ? widget.debt!.originalAmount
+          : 0;
+      final effectiveBalance = balance + priorContribution;
+      if (amount > effectiveBalance + 0.001) {
+        final wallet = state.walletById(_walletId!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Not enough balance in ${wallet?.name ?? "this wallet"} '
+              '(₱ ${effectiveBalance.toStringAsFixed(2)}). Lower the amount '
+              'or pick another wallet.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
     if (widget.debt == null) {
       await state.addDebt(
         party: party,
@@ -405,6 +431,31 @@ class _DebtPaymentSheetState extends State<_DebtPaymentSheet> {
       return;
     }
     final state = context.read<AppState>();
+    // For "I owe" debts paid from a wallet, an expense will post — guard
+    // against pushing the wallet below zero.
+    if (_walletId != null &&
+        widget.debt.direction == DebtDirection.iOwe) {
+      final balance = state.walletBalance(_walletId!);
+      final priorContribution = (widget.payment != null &&
+              widget.payment!.walletId == _walletId &&
+              widget.payment!.linkedWalletTxnId != null)
+          ? widget.payment!.amount
+          : 0;
+      final effectiveBalance = balance + priorContribution;
+      if (amount > effectiveBalance + 0.001) {
+        final wallet = state.walletById(_walletId!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Not enough balance in ${wallet?.name ?? "this wallet"} '
+              '(₱ ${effectiveBalance.toStringAsFixed(2)}). Lower the amount '
+              'or pick another wallet.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
     if (_isEdit) {
       await state.updateDebtPayment(
         debtId: widget.debt.id,

@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "versionCode": 7,
+  "version": "1.7.0",
+  "versionCode": 8,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Debt principals now link to wallets — recording 'I owe' adds income to your chosen wallet, 'Owed to me' deducts an expense. Edit/delete on either side stays in sync."
+  "notes": "Home-screen widget (total assets, I owe, owed to me), notifications for debt due dates / goal milestones / net-worth milestones, wallet balance guard on debt entries, debt page redesign (totals on top), and dual-icon goals."
 }

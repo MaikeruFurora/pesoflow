@@ -52,21 +52,6 @@ class _DebtsScreenState extends State<DebtsScreen>
             onPressed: () => showDebtEditSheet(context),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabs,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          dividerColor: Colors.transparent,
-          unselectedLabelColor: Theme.of(context)
-              .colorScheme
-              .onSurface
-              .withOpacity(0.55),
-          labelStyle: const TextStyle(fontWeight: FontWeight.w700),
-          tabs: [
-            Tab(text: 'Owed to me (${owedFiltered.length})'),
-            Tab(text: 'I owe (${iOweFiltered.length})'),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -91,6 +76,25 @@ class _DebtsScreenState extends State<DebtsScreen>
                     icon: Icons.north_east,
                   ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: TabBar(
+              controller: _tabs,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.primary,
+              dividerColor: Colors.transparent,
+              unselectedLabelColor: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.55),
+              labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+              tabs: [
+                Tab(text: 'Owed to me (${owedFiltered.length})'),
+                Tab(text: 'I owe (${iOweFiltered.length})'),
               ],
             ),
           ),

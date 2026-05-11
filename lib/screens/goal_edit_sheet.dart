@@ -37,6 +37,7 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
   late final TextEditingController _target;
   late final TextEditingController _notes;
   late String _emoji;
+  late String _emoji2;
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
     );
     _notes = TextEditingController(text: widget.goal?.notes ?? '');
     _emoji = widget.goal?.emoji ?? '🎯';
+    _emoji2 = widget.goal?.emoji2 ?? '';
   }
 
   @override
@@ -66,6 +68,7 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
       await state.addGoal(
         name: name,
         emoji: _emoji,
+        emoji2: _emoji2,
         targetAmount: tgt,
         notes: _notes.text.trim(),
       );
@@ -73,6 +76,7 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
       final g = widget.goal!
         ..name = name
         ..emoji = _emoji
+        ..emoji2 = _emoji2
         ..targetAmount = tgt
         ..notes = _notes.text.trim();
       await state.updateGoal(g);
@@ -111,7 +115,52 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 16),
-            const Text('Pick an icon',
+            // Live preview of the chosen icon combo.
+            Center(
+              child: Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Text(_emoji,
+                          style: const TextStyle(fontSize: 38)),
+                    ),
+                    if (_emoji2.isNotEmpty)
+                      Positioned(
+                        right: 4,
+                        bottom: 4,
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.10),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(_emoji2,
+                                style:
+                                    const TextStyle(fontSize: 16)),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Primary icon',
                 style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
             Wrap(
@@ -137,6 +186,84 @@ class _GoalEditSheetState extends State<_GoalEditSheet> {
                   ),
                 );
               }).toList(),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Text('Secondary icon',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _emoji2.isEmpty ? 'None' : 'On',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => _emoji2 = ''),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _emoji2.isEmpty
+                          ? AppColors.primary.withOpacity(0.12)
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: _emoji2.isEmpty
+                          ? Border.all(color: AppColors.primary, width: 2)
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.block_rounded,
+                      size: 20,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.5),
+                    ),
+                  ),
+                ),
+                ..._emojiChoices.where((e) => e != _emoji).map((e) {
+                  final selected = _emoji2 == e;
+                  return GestureDetector(
+                    onTap: () => setState(() => _emoji2 = e),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.primarySoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(e,
+                            style: const TextStyle(fontSize: 22)),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
             const SizedBox(height: 18),
             TextField(
