@@ -1,6 +1,6 @@
 # PesoFlow
 
-A new Flutter project.
+PesoFlow is a private, on-device savings app that tracks every peso across your wallets, ipon goals, and debts — without an account, without the cloud.
 
 ## Getting Started
 
@@ -14,10 +14,8 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-
-# pesoflow
-
-## Screenshots
+ 
+# Screenshots
 
 ![Screenshot 1](main/android/docs/img/1.jpg)
 ![Screenshot 2](android/docs/img/2.jpg)
