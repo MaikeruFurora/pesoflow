@@ -17,9 +17,12 @@ samples, guidance on mobile development, and a full API reference.
  
 # Screenshots
 
-![Screenshot 1](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/1.jpg)
-![Screenshot 2](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/2.jpg)
-![Screenshot 3](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/3.jpg)
-![Screenshot 4](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/4.jpg)
-![Screenshot 5](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/5.jpg)
-![Screenshot 6](https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/6.jpg) 
+<p float="left">
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/1.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/2.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/3.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/4.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/5.jpg" width="200" />
+  <img src="https://github.com/MaikeruFurora/pesoflow/blob/main/docs/img/6.jpg" width="200" />
+</p>
+
