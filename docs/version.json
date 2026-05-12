@@ -1,6 +1,6 @@
 {
-  "version": "1.8.0",
-  "versionCode": 13,
+  "version": "1.8.1",
+  "versionCode": 14,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Insights screen with monthly income/expense/net, donut breakdown by category, daily expense bars, and top 5 categories. Launcher shortcuts — long-press the icon for Add expense, Save to goal, Transfer. Debt detail now shows a coral payoff jar that drains as you pay down — 'Cleared!' when zeroed."
+  "notes": "UI polish — donut and legend on the Insights screen now breathe (extra spacing), launcher shortcut icons redrawn with clearer shapes (outgoing arrow / flag / two-way arrows), and the debt payoff jar is now a compact thumbnail tucked beside the Remaining amount inside the debt header instead of taking a whole card."
 }

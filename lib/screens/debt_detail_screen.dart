@@ -170,16 +170,41 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                const Text('Remaining',
-                    style: TextStyle(color: Colors.white70)),
-                const SizedBox(height: 4),
-                MoneyText(
-                  debt.remaining,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Remaining',
+                              style: TextStyle(color: Colors.white70)),
+                          const SizedBox(height: 4),
+                          MoneyText(
+                            debt.remaining,
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 56,
+                      height: 72,
+                      child: DebtJar(
+                        remaining: debt.originalAmount == 0
+                            ? 0.0
+                            : (debt.remaining / debt.originalAmount)
+                                .clamp(0.0, 1.0),
+                        paidOff: debt.isPaid,
+                        showPercent: false,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 ClipRRect(
@@ -210,22 +235,6 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
                   ],
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SoftCard(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: SizedBox(
-                height: 220,
-                child: DebtJar(
-                  remaining: debt.originalAmount == 0
-                      ? 0.0
-                      : (debt.remaining / debt.originalAmount)
-                          .clamp(0.0, 1.0),
-                  paidOff: debt.isPaid,
-                ),
-              ),
             ),
           ),
           if (debt.notes.isNotEmpty) ...[

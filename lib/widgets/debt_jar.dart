@@ -16,11 +16,16 @@ class DebtJar extends StatefulWidget {
     required this.remaining,
     this.height = 240,
     this.paidOff = false,
+    this.showPercent = true,
   });
 
   final double remaining;
   final double height;
   final bool paidOff;
+
+  /// Show the "%" / "Cleared!" label centered in the jar. Disable for tiny
+  /// inline thumbnails where text would just be clutter.
+  final bool showPercent;
 
   @override
   State<DebtJar> createState() => _DebtJarState();
@@ -75,51 +80,53 @@ class _DebtJarState extends State<DebtJar> with TickerProviderStateMixin {
               fill: _currentFill,
               wavePhase: _wave.value * math.pi * 2,
             ),
-            child: LayoutBuilder(builder: (_, c) {
-              const topPct = 0.27;
-              return Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: c.maxHeight * topPct,
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            widget.paidOff
-                                ? 'Cleared!'
-                                : '${(_currentFill * 100).round()}%',
-                            style: TextStyle(
-                              fontSize: widget.paidOff ? 24 : 32,
-                              fontWeight: FontWeight.w800,
-                              color: widget.paidOff
-                                  ? AppColors.success
-                                  : const Color(0xFFB14A2F),
-                              height: 1.0,
-                              letterSpacing: -0.5,
+            child: widget.showPercent
+                ? LayoutBuilder(builder: (_, c) {
+                    const topPct = 0.27;
+                    return Stack(
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: c.maxHeight * topPct,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Text(
+                                  widget.paidOff
+                                      ? 'Cleared!'
+                                      : '${(_currentFill * 100).round()}%',
+                                  style: TextStyle(
+                                    fontSize: widget.paidOff ? 24 : 32,
+                                    fontWeight: FontWeight.w800,
+                                    color: widget.paidOff
+                                        ? AppColors.success
+                                        : const Color(0xFFB14A2F),
+                                    height: 1.0,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                if (!widget.paidOff)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      'remaining',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF9A6650),
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
-                          if (!widget.paidOff)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 2),
-                              child: Text(
-                                'remaining',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF9A6650),
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }),
+                        ),
+                      ],
+                    );
+                  })
+                : const SizedBox.shrink(),
           );
         },
       ),

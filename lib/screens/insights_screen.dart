@@ -331,25 +331,28 @@ class _CategoryDonutCard extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 5,
-                  child: PieChart(
-                    PieChartData(
-                      sections: [
-                        for (var i = 0; i < slices.length; i++)
-                          PieChartSectionData(
-                            value: slices[i].value,
-                            color: _palette[i % _palette.length],
-                            title: '',
-                            radius: 38,
-                            showTitle: false,
-                          ),
-                      ],
-                      centerSpaceRadius: 36,
-                      sectionsSpace: 2,
-                      borderData: FlBorderData(show: false),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: PieChart(
+                      PieChartData(
+                        sections: [
+                          for (var i = 0; i < slices.length; i++)
+                            PieChartSectionData(
+                              value: slices[i].value,
+                              color: _palette[i % _palette.length],
+                              title: '',
+                              radius: 34,
+                              showTitle: false,
+                            ),
+                        ],
+                        centerSpaceRadius: 32,
+                        sectionsSpace: 2,
+                        borderData: FlBorderData(show: false),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 18),
                 Expanded(
                   flex: 6,
                   child: Column(
