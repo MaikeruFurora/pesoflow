@@ -6,6 +6,7 @@ import '../models/debt.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_filter.dart';
+import '../widgets/debt_jar.dart';
 import '../widgets/money_text.dart';
 import '../widgets/row_actions.dart';
 import '../widgets/soft_card.dart';
@@ -209,6 +210,22 @@ class _DebtDetailScreenState extends State<DebtDetailScreen> {
                   ],
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SoftCard(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: SizedBox(
+                height: 220,
+                child: DebtJar(
+                  remaining: debt.originalAmount == 0
+                      ? 0.0
+                      : (debt.remaining / debt.originalAmount)
+                          .clamp(0.0, 1.0),
+                  paidOff: debt.isPaid,
+                ),
+              ),
             ),
           ),
           if (debt.notes.isNotEmpty) ...[

@@ -11,6 +11,7 @@ import '../widgets/money_text.dart';
 import '../widgets/soft_card.dart';
 import '../widgets/update_banner.dart';
 import 'goal_detail_screen.dart';
+import 'insights_screen.dart';
 import 'search_screen.dart';
 import 'wallet_detail_screen.dart';
 
@@ -87,6 +88,26 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       icon: const Icon(
                         Icons.search_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: 'Insights',
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const InsightsScreen(),
+                        ),
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.primarySoft,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        minimumSize: const Size(44, 44),
+                      ),
+                      icon: const Icon(
+                        Icons.insights_rounded,
                         color: AppColors.primary,
                       ),
                     ),

@@ -1,6 +1,6 @@
 {
-  "version": "1.7.4",
-  "versionCode": 12,
+  "version": "1.8.0",
+  "versionCode": 13,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Removed the home-screen widget. Dashboard FAB is now a perfect circle with just a +. Inactivity reminders now also fire after 1 day (in addition to 3 and 7 days) — short, motivational nudges at 9 AM Manila time that auto-cancel the moment you log anything."
+  "notes": "Insights screen with monthly income/expense/net, donut breakdown by category, daily expense bars, and top 5 categories. Launcher shortcuts — long-press the icon for Add expense, Save to goal, Transfer. Debt detail now shows a coral payoff jar that drains as you pay down — 'Cleared!' when zeroed."
 }

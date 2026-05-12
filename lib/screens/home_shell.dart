@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:quick_actions/quick_actions.dart';
 
+import '../models/txn_entry.dart';
+import '../models/wallet_txn.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
 import 'debt_edit_sheet.dart';
@@ -7,8 +12,10 @@ import 'debts_screen.dart';
 import 'goal_edit_sheet.dart';
 import 'goals_screen.dart';
 import 'settings_screen.dart';
+import 'transaction_sheet.dart';
 import 'transfer_sheet.dart';
 import 'wallet_edit_sheet.dart';
+import 'wallet_txn_sheet.dart';
 import 'wallets_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -19,6 +26,58 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  final QuickActions _quickActions = const QuickActions();
+  String? _pendingShortcut;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupQuickActions();
+  }
+
+  void _setupQuickActions() {
+    _quickActions.initialize((type) {
+      // The callback fires during cold-launch before the widget tree has the
+      // context we need to show sheets. Buffer the action and replay it once
+      // the first frame is rendered.
+      _pendingShortcut = type;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _drainShortcut());
+    });
+    _quickActions.setShortcutItems(const [
+      ShortcutItem(
+        type: 'action_add_expense',
+        localizedTitle: 'Add expense',
+        icon: 'ic_shortcut_expense',
+      ),
+      ShortcutItem(
+        type: 'action_save_goal',
+        localizedTitle: 'Save to goal',
+        icon: 'ic_shortcut_goal',
+      ),
+      ShortcutItem(
+        type: 'action_transfer',
+        localizedTitle: 'Transfer',
+        icon: 'ic_shortcut_transfer',
+      ),
+    ]);
+  }
+
+  void _drainShortcut() {
+    final type = _pendingShortcut;
+    if (type == null || !mounted) return;
+    _pendingShortcut = null;
+    switch (type) {
+      case 'action_add_expense':
+        _quickAddExpense(context);
+        break;
+      case 'action_save_goal':
+        _quickSaveMoney(context);
+        break;
+      case 'action_transfer':
+        showTransferSheet(context);
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,4 +255,130 @@ class _HomeShellState extends State<HomeShell> {
       onTap: onTap,
     );
   }
+
+  // ---- Launcher shortcut handlers ---------------------------------------
+  Future<void> _quickAddExpense(BuildContext context) async {
+    final state = context.read<AppState>();
+    final wallets = state.wallets;
+    if (wallets.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add a wallet first.')),
+      );
+      return;
+    }
+    String? walletId = wallets.length == 1
+        ? wallets.first.id
+        : await _pickFromList<String>(
+            context,
+            title: 'Pay from which wallet?',
+            items: [
+              for (final w in wallets)
+                _PickerItem(
+                  value: w.id,
+                  emoji: w.emoji,
+                  label: w.name,
+                  subtitle:
+                      '₱ ${state.walletBalance(w.id).toStringAsFixed(2)}',
+                ),
+            ],
+          );
+    if (walletId == null) return;
+    if (!context.mounted) return;
+    await showWalletTxnSheet(
+      context,
+      walletId: walletId,
+      type: WalletTxnType.expense,
+    );
+  }
+
+  Future<void> _quickSaveMoney(BuildContext context) async {
+    final state = context.read<AppState>();
+    final goals =
+        state.goals.where((g) => g.completedAt == null).toList();
+    if (goals.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Create an ipon goal first.')),
+      );
+      return;
+    }
+    String? goalId = goals.length == 1
+        ? goals.first.id
+        : await _pickFromList<String>(
+            context,
+            title: 'Save toward which goal?',
+            items: [
+              for (final g in goals)
+                _PickerItem(
+                  value: g.id,
+                  emoji: g.emoji,
+                  label: g.name,
+                  subtitle: g.targetAmount == null
+                      ? null
+                      : '₱ ${state.balanceFor(g.id).toStringAsFixed(0)} / ₱ ${g.targetAmount!.toStringAsFixed(0)}',
+                ),
+            ],
+          );
+    if (goalId == null) return;
+    if (!context.mounted) return;
+    await showTransactionSheet(
+      context,
+      goalId: goalId,
+      type: TxnType.deposit,
+    );
+  }
+
+  Future<T?> _pickFromList<T>(
+    BuildContext context, {
+    required String title,
+    required List<_PickerItem<T>> items,
+  }) {
+    return showModalBottomSheet<T>(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                title,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+            ),
+            for (final it in items)
+              ListTile(
+                leading: Text(it.emoji,
+                    style: const TextStyle(fontSize: 24)),
+                title: Text(it.label,
+                    style:
+                        const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle:
+                    it.subtitle == null ? null : Text(it.subtitle!),
+                onTap: () => Navigator.of(sheetCtx).pop(it.value),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PickerItem<T> {
+  const _PickerItem({
+    required this.value,
+    required this.emoji,
+    required this.label,
+    this.subtitle,
+  });
+
+  final T value;
+  final String emoji;
+  final String label;
+  final String? subtitle;
 }
