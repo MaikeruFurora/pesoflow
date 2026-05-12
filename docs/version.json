@@ -1,6 +1,6 @@
 {
-  "version": "1.7.3",
-  "versionCode": 11,
+  "version": "1.7.4",
+  "versionCode": 12,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Widget redesign — cream card with PesoFlow brand + total assets on top, a layered cyan wave at the bottom with three gold ₱ coins resting on it. Wallet picker balance is now plain text (calmer to read)."
+  "notes": "Removed the home-screen widget. Dashboard FAB is now a perfect circle with just a +. Inactivity reminders now also fire after 1 day (in addition to 3 and 7 days) — short, motivational nudges at 9 AM Manila time that auto-cancel the moment you log anything."
 }

@@ -36,11 +36,12 @@ class _HomeShellState extends State<HomeShell> {
 
     Widget? fab;
     if (_index == 0) {
-      fab = FloatingActionButton.extended(
+      fab = FloatingActionButton(
         onPressed: () => _showQuickAddMenu(context),
         backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add),
       );
     } else if (_index == 1) {
       fab = FloatingActionButton.extended(

@@ -9,12 +9,12 @@ import '../models/wallet_txn.dart';
 import '../services/notification_service.dart';
 import '../services/storage_service.dart';
 import '../services/wallet_asset_service.dart';
-import 'home_widget_sync.dart';
 
 class AppState extends ChangeNotifier {
   AppState(this.storage) {
     _hideBalances = storage.hideBalances;
     _refresh();
+    _rescheduleInactivityReminders();
   }
 
   final StorageService storage;
@@ -73,16 +73,32 @@ class AppState extends ChangeNotifier {
   Future<void> reload() async {
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
   }
 
-  void _pushWidgetSummary() {
-    // Fire-and-forget. Failures are swallowed inside HomeWidgetSync.
-    HomeWidgetSync.push(
-      totalAssets: totalAssets,
-      iOwe: totalIOwe,
-      owedToMe: totalOwedToMe,
-    );
+  /// Most recent timestamp across all tracked activity (wallet txns, goal
+  /// deposits/withdrawals, debt payments). Used to compute when to remind a
+  /// dormant user to log again.
+  DateTime get lastActivityDate {
+    DateTime latest = DateTime.fromMillisecondsSinceEpoch(0);
+    for (final t in _walletTxns) {
+      if (t.date.isAfter(latest)) latest = t.date;
+    }
+    for (final t in _txns) {
+      if (t.date.isAfter(latest)) latest = t.date;
+    }
+    if (latest.millisecondsSinceEpoch == 0) {
+      // No activity yet — pretend "today" so the 3-day reminder fires 3 days
+      // after install, not from epoch.
+      return DateTime.now();
+    }
+    return latest;
+  }
+
+  void _rescheduleInactivityReminders() {
+    // Fire-and-forget; service handles its own init/cancel.
+    NotificationService.instance
+        .scheduleInactivityReminders(lastActivity: lastActivityDate);
   }
 
   // ---- Milestone thresholds ---------------------------------------------
@@ -283,7 +299,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
     return debt;
   }
@@ -352,7 +368,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
   }
 
@@ -397,7 +413,7 @@ class AppState extends ChangeNotifier {
     await NotificationService.instance.cancelDebtReminders(id);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
   }
 
   Future<void> addDebtPayment({
@@ -427,7 +443,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
   }
 
@@ -483,7 +499,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
   }
 
@@ -501,7 +517,7 @@ class AppState extends ChangeNotifier {
     await storage.saveDebt(debt);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
   }
 
@@ -643,7 +659,7 @@ class AppState extends ChangeNotifier {
     await storage.saveWalletTxn(t);
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
     _checkAssetMilestone(prevAssets);
     return t;
   }
@@ -687,7 +703,7 @@ class AppState extends ChangeNotifier {
     }
     _refresh();
     notifyListeners();
-    _pushWidgetSummary();
+    _rescheduleInactivityReminders();
   }
 
   /// Atomic-ish transfer: writes a transferOut on source and transferIn

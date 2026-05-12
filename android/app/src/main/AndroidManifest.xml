@@ -38,17 +38,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Home-screen widget for total assets / I owe / Owed to me -->
-        <receiver android:name=".PesoFlowWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/peso_flow_widget_info" />
-        </receiver>
-
         <!-- flutter_local_notifications boot receivers -->
         <receiver android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />

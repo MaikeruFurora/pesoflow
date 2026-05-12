@@ -36,6 +36,13 @@ class NotificationService {
     importance: Importance.defaultImportance,
   );
 
+  static const _channelInactivity = AndroidNotificationChannel(
+    'pesoflow_inactivity',
+    'Tracking reminders',
+    description: 'Gentle nudges when you haven\'t logged in a while.',
+    importance: Importance.high,
+  );
+
   bool _ready = false;
 
   Future<void> init() async {
@@ -65,6 +72,7 @@ class NotificationService {
         await android.createNotificationChannel(_channelDebt);
         await android.createNotificationChannel(_channelGoal);
         await android.createNotificationChannel(_channelAsset);
+        await android.createNotificationChannel(_channelInactivity);
         await android.requestNotificationsPermission();
         await android.requestExactAlarmsPermission();
       }
@@ -251,6 +259,112 @@ class NotificationService {
     await init();
     await _plugin.cancel(_stableId('debt-soon-$debtId'));
     await _plugin.cancel(_stableId('debt-over-$debtId'));
+  }
+
+  // --------------------------------------------------------- Inactivity --
+  /// Schedules three motivational reminders firing 1, 3, and 7 days after the
+  /// user's last activity (at 9 AM local). Any existing inactivity reminders
+  /// are cancelled first, so this is safe to call on every activity.
+  Future<void> scheduleInactivityReminders({
+    required DateTime lastActivity,
+  }) async {
+    await init();
+    await cancelInactivityReminders();
+
+    final base = tz.TZDateTime(
+      tz.local,
+      lastActivity.year,
+      lastActivity.month,
+      lastActivity.day,
+      9,
+    );
+    final oneDay = base.add(const Duration(days: 1));
+    final threeDay = base.add(const Duration(days: 3));
+    final sevenDay = base.add(const Duration(days: 7));
+    final now = tz.TZDateTime.now(tz.local);
+
+    const oneDayTitle = '☕ Kumusta? Got something to log today?';
+    const oneDayBody =
+        'A day already? 👋 30 seconds is all it takes — log today\'s coffee, jeepney, or kanin. Tracking daily is how saving becomes a habit.';
+
+    const threeDayTitle = '💸 Miss kita! Where did the pesos go?';
+    const threeDayBody =
+        'It\'s been 3 days since your last entry. Got an expense or income to record? Tap to log it now — small habits, big ipon.';
+
+    const sevenDayTitle = '🐷 Your piggy bank misses you';
+    const sevenDayBody =
+        'A whole week na walang record! Tracking your money is the easiest way to find ₱500+ in "where did it go?" mystery spending. Open PesoFlow and catch up. 💪';
+
+    if (oneDay.isAfter(now)) {
+      await _plugin.zonedSchedule(
+        _stableId('inactivity-1d'),
+        oneDayTitle,
+        oneDayBody,
+        oneDay,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelInactivity.id,
+            _channelInactivity.name,
+            channelDescription: _channelInactivity.description,
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: const BigTextStyleInformation(oneDayBody),
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+    if (threeDay.isAfter(now)) {
+      await _plugin.zonedSchedule(
+        _stableId('inactivity-3d'),
+        threeDayTitle,
+        threeDayBody,
+        threeDay,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelInactivity.id,
+            _channelInactivity.name,
+            channelDescription: _channelInactivity.description,
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: const BigTextStyleInformation(threeDayBody),
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+    if (sevenDay.isAfter(now)) {
+      await _plugin.zonedSchedule(
+        _stableId('inactivity-7d'),
+        sevenDayTitle,
+        sevenDayBody,
+        sevenDay,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelInactivity.id,
+            _channelInactivity.name,
+            channelDescription: _channelInactivity.description,
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: const BigTextStyleInformation(sevenDayBody),
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
+  }
+
+  Future<void> cancelInactivityReminders() async {
+    await init();
+    await _plugin.cancel(_stableId('inactivity-1d'));
+    await _plugin.cancel(_stableId('inactivity-3d'));
+    await _plugin.cancel(_stableId('inactivity-7d'));
   }
 
   // ID space: flutter_local_notifications uses int IDs. Hash a string into
