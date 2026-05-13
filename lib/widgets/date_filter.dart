@@ -5,8 +5,9 @@ import '../theme/app_theme.dart';
 
 enum DateFilterMode { all, day, month, year, custom }
 
-/// Inclusive date-range filter. [start] and [end] include the full day
-/// boundaries (00:00:00.000 → 23:59:59.999).
+/// Half-open date-range filter: `[start, end)`. `start` is inclusive,
+/// `end` is exclusive (typically midnight of the day AFTER the range), so
+/// microsecond-precision timestamps near 23:59:59.999 never get dropped.
 class DateFilter {
   const DateFilter({
     this.mode = DateFilterMode.all,
@@ -21,7 +22,7 @@ class DateFilter {
   bool includes(DateTime d) {
     if (mode == DateFilterMode.all) return true;
     if (start != null && d.isBefore(start!)) return false;
-    if (end != null && d.isAfter(end!)) return false;
+    if (end != null && !d.isBefore(end!)) return false;
     return true;
   }
 
@@ -48,28 +49,26 @@ class DateFilter {
 
   static DateFilter day(DateTime d) {
     final s = DateTime(d.year, d.month, d.day);
-    final e = s.add(const Duration(days: 1)).subtract(
-        const Duration(milliseconds: 1));
+    final e = s.add(const Duration(days: 1));
     return DateFilter(mode: DateFilterMode.day, start: s, end: e);
   }
 
   static DateFilter month(DateTime d) {
     final s = DateTime(d.year, d.month, 1);
-    final e = DateTime(d.year, d.month + 1, 1)
-        .subtract(const Duration(milliseconds: 1));
+    final e = DateTime(d.year, d.month + 1, 1);
     return DateFilter(mode: DateFilterMode.month, start: s, end: e);
   }
 
   static DateFilter year(DateTime d) {
     final s = DateTime(d.year, 1, 1);
-    final e = DateTime(d.year + 1, 1, 1)
-        .subtract(const Duration(milliseconds: 1));
+    final e = DateTime(d.year + 1, 1, 1);
     return DateFilter(mode: DateFilterMode.year, start: s, end: e);
   }
 
   static DateFilter custom(DateTime start, DateTime end) {
     final s = DateTime(start.year, start.month, start.day);
-    final e = DateTime(end.year, end.month, end.day, 23, 59, 59, 999);
+    final e = DateTime(end.year, end.month, end.day)
+        .add(const Duration(days: 1));
     return DateFilter(mode: DateFilterMode.custom, start: s, end: e);
   }
 }

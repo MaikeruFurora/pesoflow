@@ -1,6 +1,6 @@
 {
-  "version": "1.8.1",
-  "versionCode": 14,
+  "version": "1.8.4",
+  "versionCode": 17,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "UI polish — donut and legend on the Insights screen now breathe (extra spacing), launcher shortcut icons redrawn with clearer shapes (outgoing arrow / flag / two-way arrows), and the debt payoff jar is now a compact thumbnail tucked beside the Remaining amount inside the debt header instead of taking a whole card."
+  "notes": "In-app update flow — tapping the update banner now downloads the APK inside the app with a live progress bar, then fires the system installer directly. No more browser hop, no more pesoflow(2).apk clutter. APK size dropped from ~25 MB to ~9 MB thanks to split-per-ABI + obfuscation (arm64 build for modern Android)."
 }

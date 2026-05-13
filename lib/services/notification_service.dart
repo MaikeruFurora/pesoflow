@@ -44,17 +44,34 @@ class NotificationService {
   );
 
   bool _ready = false;
+  Future<void>? _initFuture;
 
   Future<void> init() async {
     if (_ready) return;
+    // Coalesce concurrent callers onto a single in-flight init so we don't
+    // double-register channels (which logs warnings and on some OEMs creates
+    // duplicate-looking entries in the system notification settings).
+    return _initFuture ??= _doInit();
+  }
+
+  Future<void> _doInit() async {
     tzdata.initializeTimeZones();
-    // Default to local timezone via DateTime offset; if more precision is
-    // needed later, flutter_timezone could resolve the actual IANA name.
+    // Pick a tz database location whose offset matches the device's current
+    // offset. Manila users (the majority) get Asia/Manila so DST-style edits
+    // resolve sanely; everyone else gets a same-offset Etc/GMT zone so the
+    // "9 AM local" reminders actually fire at 9 AM wall-clock for them.
     try {
-      final now = DateTime.now();
-      final offsetMinutes = now.timeZoneOffset.inMinutes;
-      final tzName =
-          offsetMinutes == 480 ? 'Asia/Manila' : 'Etc/UTC';
+      final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+      String tzName;
+      if (offsetMinutes == 480) {
+        tzName = 'Asia/Manila';
+      } else if (offsetMinutes % 60 == 0) {
+        // Etc/GMT signs are inverted — Etc/GMT-8 is UTC+8 in IANA land.
+        final hours = offsetMinutes ~/ 60;
+        tzName = hours == 0 ? 'Etc/UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+      } else {
+        tzName = 'Etc/UTC';
+      }
       tz.setLocalLocation(tz.getLocation(tzName));
     } catch (_) {
       tz.setLocalLocation(tz.UTC);
@@ -189,20 +206,42 @@ class NotificationService {
     await cancelDebtReminders(debtId);
     if (dueDate == null || remaining <= 0) return;
 
-    final dueSoon = tz.TZDateTime(
-        tz.local, dueDate.year, dueDate.month, dueDate.day, 9)
-        .subtract(const Duration(days: 1));
-    final overdue = tz.TZDateTime(
-        tz.local, dueDate.year, dueDate.month, dueDate.day, 9)
-        .add(const Duration(days: 1));
+    final dueDay9 = tz.TZDateTime(
+        tz.local, dueDate.year, dueDate.month, dueDate.day, 9);
+    final dueSoon = dueDay9.subtract(const Duration(days: 1));
+    final overdue = dueDay9.add(const Duration(days: 1));
     final now = tz.TZDateTime.now(tz.local);
 
+    // Pick the soonest still-future heads-up slot. If the day-before slot has
+    // already passed (debt added the day of, or hours before the deadline),
+    // fall back to the due-day 9 AM, then to "right now + 1 min" so a
+    // last-minute debt still gets one heads-up before turning overdue.
+    tz.TZDateTime? heads;
+    bool sameDay = false;
+    if (dueSoon.isAfter(now)) {
+      heads = dueSoon;
+    } else if (dueDay9.isAfter(now)) {
+      heads = dueDay9;
+      sameDay = true;
+    } else if (overdue.isAfter(now)) {
+      heads = now.add(const Duration(minutes: 1));
+      sameDay = true;
+    }
+
     final soonTitle = iOwe
-        ? '⏰ Payment due tomorrow — $party'
-        : '⏰ $party owes you tomorrow';
+        ? (sameDay
+            ? '⏰ Payment due today — $party'
+            : '⏰ Payment due tomorrow — $party')
+        : (sameDay
+            ? '⏰ $party owes you today'
+            : '⏰ $party owes you tomorrow');
     final soonBody = iOwe
-        ? 'Heads up: your debt to $party is due tomorrow. Schedule the transfer today para wala kang gulo.'
-        : 'Friendly reminder: $party\'s payment to you is due tomorrow. Drop them a polite ping if needed.';
+        ? (sameDay
+            ? 'Today is the day — your debt to $party is due. Send the transfer before it tips overdue.'
+            : 'Heads up: your debt to $party is due tomorrow. Schedule the transfer today para wala kang gulo.')
+        : (sameDay
+            ? 'Today is the day — $party\'s payment to you is due. Tap to message them a quick reminder.'
+            : 'Friendly reminder: $party\'s payment to you is due tomorrow. Drop them a polite ping if needed.');
 
     final overTitle = iOwe
         ? '🚨 Overdue: pay $party'
@@ -211,12 +250,12 @@ class NotificationService {
         ? 'This debt is past due. Settle it today if you can — late payments compound stress.'
         : 'Still no payment from $party. Time for a follow-up message.';
 
-    if (dueSoon.isAfter(now)) {
+    if (heads != null) {
       await _plugin.zonedSchedule(
         _stableId('debt-soon-$debtId'),
         soonTitle,
         soonBody,
-        dueSoon,
+        heads,
         NotificationDetails(
           android: AndroidNotificationDetails(
             _channelDebt.id,

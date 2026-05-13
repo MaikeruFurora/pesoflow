@@ -1,7 +1,7 @@
 name: iponlock
 description: "PesoFlow — secure savings, wallets, goals, and debt tracker."
 publish_to: 'none'
-version: 1.8.1+14
+version: 1.8.4+17
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -33,6 +33,9 @@ dependencies:
   flutter_local_notifications: ^17.2.2
   timezone: ^0.9.4
   quick_actions: ^1.0.7
+  dio: ^5.4.0
+  install_plugin: ^2.1.0
+  permission_handler: ^11.3.0
 
 dev_dependencies:
   flutter_test:

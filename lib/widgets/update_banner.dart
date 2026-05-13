@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../theme/app_theme.dart';
+import 'update_download_sheet.dart';
 
 /// Shows a thin in-line banner if a newer build is available on the website.
 /// Renders nothing while loading or when no update / on network failure.
@@ -138,19 +139,13 @@ class _UpdateBannerState extends State<UpdateBanner> {
 
   Future<void> _open(UpdateInfo info) async {
     setState(() => _opening = true);
-    final ok = await _service.openUpdateLink(info.url);
+    // In-app download + install — no browser, no Downloads folder. The
+    // banner stays acknowledged only after the user actually upgrades (the
+    // version check on next launch will naturally hide it). We intentionally
+    // do NOT pre-ack here: if the user cancels mid-download, they should
+    // still see the banner next session and try again.
+    await showUpdateDownloadSheet(context, info: info);
     if (!mounted) return;
     setState(() => _opening = false);
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open the download link.'),
-        ),
-      );
-      return;
-    }
-    // User chose to download — acknowledge this build so the banner won't
-    // keep reappearing until a strictly newer build is published.
-    _acknowledgeAndClose(info);
   }
 }

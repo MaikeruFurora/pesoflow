@@ -596,15 +596,18 @@ class _TxnTile extends StatelessWidget {
 
   String? _findCounterparty(AppState state, WalletTxn t) {
     if (t.linkedTxnId == null) return null;
-    final pair = state.walletTxns
+    // Search the full list (including vault) so transfers with a vault
+    // counterpart still resolve. The vault name is intentionally masked so
+    // the public ledger never leaks which specific vault wallet was paired.
+    final pair = state.allWalletTxns
         .where((x) => x.linkedTxnId == t.linkedTxnId && x.id != t.id)
         .firstOrNull;
     if (pair == null) return null;
-    final w =
-        state.wallets.where((x) => x.id == pair.walletId).firstOrNull;
+    final w = state.walletById(pair.walletId);
     if (w == null) return null;
+    final label = w.isVault ? 'Vault' : w.name;
     return t.type == WalletTxnType.transferIn
-        ? 'from ${w.name}'
-        : 'to ${w.name}';
+        ? 'from $label'
+        : 'to $label';
   }
 }

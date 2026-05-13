@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Outgoing arrow: clearly signals "money leaving" / expense -->
+<!-- Outgoing arrow — single clean path, Material "arrow_outward". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="#FFFFFFFF">
+    android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M7,17l9.2,-9.2M16.5,17V8.5H8" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M5,17.6 L17.6,5 L19,6.4 L6.4,19 Z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M9.5,5 L19,5 L19,14.5 L17,14.5 L17,7 L9.5,7 Z" />
+        android:pathData="M6.4,18.31 L15.6,9.11 H10 V7 H19 V16 H16.89 V10.4 L7.69,19.6 Z" />
 </vector>

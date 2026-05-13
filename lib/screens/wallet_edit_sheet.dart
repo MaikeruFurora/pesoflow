@@ -450,16 +450,9 @@ class _WalletEditSheetState extends State<_WalletEditSheet> {
                 prefixIcon: Icon(Icons.tag_rounded, size: 18),
               ),
             ),
-            const SizedBox(height: 16),
-            _QrSection(
-              walletColor: Color(_color),
-              stagedFile: _stagedQrFile,
-              existingPath: _existingQrPath,
-              hasQr:
-                  _stagedQrFile != null || (_existingQrPath?.isNotEmpty ?? false),
-              onPick: _pickQr,
-              onRemove: _removeQr,
-            ),
+            // QR upload temporarily hidden — existing wallet QRs are still
+            // preserved in storage and rendered elsewhere, but new uploads are
+            // disabled until the picker UX is reworked.
             const SizedBox(height: 12),
             TextField(
               controller: _notes,

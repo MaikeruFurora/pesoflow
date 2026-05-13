@@ -112,32 +112,42 @@ class AppState extends ChangeNotifier {
         orElse: () => Goal(id: '', name: ''));
     if (g.id.isEmpty || g.targetAmount == null || g.targetAmount! <= 0) return;
     final pct = ((balanceFor(g.id) / g.targetAmount!) * 100).floor();
-    for (final t in _goalMilestones) {
-      if (pct >= t && !g.notifiedMilestones.contains(t)) {
-        g.notifiedMilestones.add(t);
-        await storage.saveGoal(g);
-        await NotificationService.instance.celebrateGoalMilestone(
-          goalId: g.id,
-          goalName: g.name,
-          emoji: g.emoji,
-          percent: t,
-        );
-      }
-    }
+    // Collect every milestone newly crossed by this update so we can mark
+    // them all fired (preventing future re-fires) but only NOTIFY for the
+    // highest one. A single big deposit that jumps from 0% to 100% should
+    // ring once with the 100% celebration, not four times in a row.
+    final newlyCrossed = _goalMilestones
+        .where((t) => pct >= t && !g.notifiedMilestones.contains(t))
+        .toList();
+    if (newlyCrossed.isEmpty) return;
+    g.notifiedMilestones.addAll(newlyCrossed);
+    await storage.saveGoal(g);
+    final highest = newlyCrossed.last; // _goalMilestones is ascending
+    await NotificationService.instance.celebrateGoalMilestone(
+      goalId: g.id,
+      goalName: g.name,
+      emoji: g.emoji,
+      percent: highest,
+    );
   }
 
   Future<void> _checkAssetMilestone(double previousAssets) async {
     final current = totalAssets;
     if (current <= previousAssets) return;
+    // Same anti-spam approach as goal milestones — a single big inflow that
+    // vaults past several thresholds should only ping the highest one.
+    final newlyCrossed = <int>[];
     for (final m in _assetMilestones) {
-      if (previousAssets < m && current >= m) {
-        if (!storage.assetMilestoneFired(m)) {
-          await storage.markAssetMilestoneFired(m);
-          await NotificationService.instance
-              .celebrateAssetMilestone(peso: m);
-        }
+      if (previousAssets < m && current >= m && !storage.assetMilestoneFired(m)) {
+        newlyCrossed.add(m);
       }
     }
+    if (newlyCrossed.isEmpty) return;
+    for (final m in newlyCrossed) {
+      await storage.markAssetMilestoneFired(m);
+    }
+    await NotificationService.instance
+        .celebrateAssetMilestone(peso: newlyCrossed.last);
   }
 
   // ----- Hide balances ---------------------------------------------------
@@ -235,7 +245,12 @@ class AppState extends ChangeNotifier {
     } else if (goal.completedAt != null &&
         goal.targetAmount != null &&
         newBalance < goal.targetAmount!) {
+      // Withdrawal dropped us below the target — un-complete the goal AND
+      // forget any milestones no longer satisfied so re-completion celebrates
+      // again instead of going silent forever.
       goal.completedAt = null;
+      final pct = ((newBalance / goal.targetAmount!) * 100).floor();
+      goal.notifiedMilestones.removeWhere((m) => pct < m);
       await storage.saveGoal(goal);
     }
 
@@ -283,6 +298,7 @@ class AppState extends ChangeNotifier {
     String notes = '',
     String? walletId,
   }) async {
+    final prevAssets = totalAssets;
     final debt = Debt(
       id: _uuid.v4(),
       party: party,
@@ -301,6 +317,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     _rescheduleInactivityReminders();
     _rescheduleDebtReminders(debt);
+    _checkAssetMilestone(prevAssets);
     return debt;
   }
 
@@ -353,16 +370,20 @@ class AppState extends ChangeNotifier {
         }
       }
     } else if (debt.linkedWalletTxnId != null) {
-      // No wallet change requested but amount may have. Keep the linked txn
-      // amount in sync so balances stay correct.
+      // No wallet change requested but amount or party name may have. Keep
+      // both the linked txn amount and its note (which embeds the party)
+      // in sync so the wallet history doesn't go stale on a rename.
       final existing = _walletTxns.firstWhere(
           (t) => t.id == debt.linkedWalletTxnId,
           orElse: () => _missingTxn);
-      if (!identical(existing, _missingTxn) &&
-          existing.amount != debt.originalAmount) {
-        existing.amount = debt.originalAmount;
-        existing.note = _principalTxnNote(debt);
-        await storage.saveWalletTxn(existing);
+      if (!identical(existing, _missingTxn)) {
+        final freshNote = _principalTxnNote(debt);
+        if (existing.amount != debt.originalAmount ||
+            existing.note != freshNote) {
+          existing.amount = debt.originalAmount;
+          existing.note = freshNote;
+          await storage.saveWalletTxn(existing);
+        }
       }
     }
     await storage.saveDebt(debt);
@@ -612,12 +633,42 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> updateWallet(Wallet w) async {
+    final prevAssets = totalAssets;
     await storage.saveWallet(w);
     _refresh();
     notifyListeners();
+    // openingBalance edits change totalAssets without going through a txn,
+    // so the milestone check needs to run here too.
+    _checkAssetMilestone(prevAssets);
   }
 
   Future<void> deleteWallet(String id) async {
+    // Cascade: any debt/payment that points into this wallet via a linked
+    // WalletTxn must have its reference cleared, otherwise later edits would
+    // resurrect a txn pointing at a deleted wallet (silent balance corruption).
+    final removedTxnIds = _walletTxns
+        .where((t) => t.walletId == id)
+        .map((t) => t.id)
+        .toSet();
+    if (removedTxnIds.isNotEmpty) {
+      for (final debt in _debts) {
+        var dirty = false;
+        final before = debt.payments.length;
+        debt.payments.removeWhere(
+          (p) =>
+              p.linkedWalletTxnId != null &&
+              removedTxnIds.contains(p.linkedWalletTxnId),
+        );
+        if (debt.payments.length != before) dirty = true;
+        if (debt.linkedWalletTxnId != null &&
+            removedTxnIds.contains(debt.linkedWalletTxnId)) {
+          debt.linkedWalletTxnId = null;
+          debt.walletId = null;
+          dirty = true;
+        }
+        if (dirty) await storage.saveDebt(debt);
+      }
+    }
     await storage.deleteWallet(id);
     await storage.deleteWalletTxnsForWallet(id);
     await WalletAssetService().deleteForWallet(id);

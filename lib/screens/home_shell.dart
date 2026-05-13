@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:quick_actions/quick_actions.dart';
 
 import '../models/txn_entry.dart';
 import '../models/wallet_txn.dart';
+import '../services/quick_action_dispatcher.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
@@ -26,46 +26,34 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-  final QuickActions _quickActions = const QuickActions();
-  String? _pendingShortcut;
 
   @override
   void initState() {
     super.initState();
-    _setupQuickActions();
+    // Cold-launch: dispatcher was started in main.dart before auth, so any
+    // shortcut tapped to open the app is sitting in its buffer waiting for us.
+    final buffered = QuickActionDispatcher.instance.takePending();
+    if (buffered != null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _runShortcut(buffered));
+    }
+    // Warm-launch: register a live listener for shortcut taps while the app
+    // is already running.
+    QuickActionDispatcher.instance.listener = (type) {
+      if (!mounted) return;
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _runShortcut(type));
+    };
   }
 
-  void _setupQuickActions() {
-    _quickActions.initialize((type) {
-      // The callback fires during cold-launch before the widget tree has the
-      // context we need to show sheets. Buffer the action and replay it once
-      // the first frame is rendered.
-      _pendingShortcut = type;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _drainShortcut());
-    });
-    _quickActions.setShortcutItems(const [
-      ShortcutItem(
-        type: 'action_add_expense',
-        localizedTitle: 'Add expense',
-        icon: 'ic_shortcut_expense',
-      ),
-      ShortcutItem(
-        type: 'action_save_goal',
-        localizedTitle: 'Save to goal',
-        icon: 'ic_shortcut_goal',
-      ),
-      ShortcutItem(
-        type: 'action_transfer',
-        localizedTitle: 'Transfer',
-        icon: 'ic_shortcut_transfer',
-      ),
-    ]);
+  @override
+  void dispose() {
+    QuickActionDispatcher.instance.listener = null;
+    super.dispose();
   }
 
-  void _drainShortcut() {
-    final type = _pendingShortcut;
-    if (type == null || !mounted) return;
-    _pendingShortcut = null;
+  void _runShortcut(String type) {
+    if (!mounted) return;
     switch (type) {
       case 'action_add_expense':
         _quickAddExpense(context);
@@ -284,6 +272,9 @@ class _HomeShellState extends State<HomeShell> {
           );
     if (walletId == null) return;
     if (!context.mounted) return;
+    // Wallet may have been deleted while the picker was open. Bail quietly
+    // rather than crashing inside the sheet's walletBalance lookup.
+    if (context.read<AppState>().walletById(walletId) == null) return;
     await showWalletTxnSheet(
       context,
       walletId: walletId,
@@ -320,6 +311,13 @@ class _HomeShellState extends State<HomeShell> {
           );
     if (goalId == null) return;
     if (!context.mounted) return;
+    // Same revalidation as the expense path — goal may have been deleted
+    // or completed during the pick.
+    final stillOpen = context
+        .read<AppState>()
+        .goals
+        .any((g) => g.id == goalId && g.completedAt == null);
+    if (!stillOpen) return;
     await showTransactionSheet(
       context,
       goalId: goalId,
