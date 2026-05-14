@@ -12,7 +12,9 @@ import '../services/storage_service.dart';
 import '../services/update_service.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/pulse_dot.dart';
 import '../widgets/soft_card.dart';
+import '../widgets/update_download_sheet.dart';
 import 'onboarding_screen.dart';
 import 'pin_prompt_screen.dart';
 import 'tour_screen.dart';
@@ -42,6 +44,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _autoLock = storage.autoLockMinutes;
     _checkBio();
     _loadAppVersion();
+    _silentUpdateCheck();
+  }
+
+  /// Background check on Settings open — populates [_pendingUpdate] so the
+  /// pulse dot shows without the user having to tap "Check for updates".
+  /// Mirrors the banner's "respect dismissed builds" rule.
+  Future<void> _silentUpdateCheck() async {
+    final svc = UpdateService();
+    final info = await svc.check();
+    if (!mounted || info == null || !info.hasUpdate) return;
+    final ack = context.read<StorageService>().acknowledgedUpdateBuild;
+    if (info.latestBuild <= ack) return;
+    setState(() => _pendingUpdate = info);
   }
 
   Future<void> _loadAppVersion() async {
@@ -69,13 +84,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   bool _checkingUpdate = false;
+  UpdateInfo? _pendingUpdate;
 
   Future<void> _checkForUpdate() async {
     setState(() => _checkingUpdate = true);
     final svc = UpdateService();
     final info = await svc.check();
     if (!mounted) return;
-    setState(() => _checkingUpdate = false);
+    setState(() {
+      _checkingUpdate = false;
+      // Refresh the pulse-dot state with whatever the live check returned.
+      _pendingUpdate =
+          (info != null && info.hasUpdate) ? info : null;
+    });
 
     if (info == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,46 +116,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Update to v${info.latestVersion}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You\'re on v${info.currentVersion}. A newer version is available.',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface
-                    .withOpacity(0.7),
-                fontSize: 13,
-              ),
-            ),
-            if (info.notes?.isNotEmpty == true) ...[
-              const SizedBox(height: 12),
-              Text(
-                info.notes!,
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Not now'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Download'),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await svc.openUpdateLink(info.url);
-    }
+    // In-app download + install — same sheet the dashboard banner uses.
+    await showUpdateDownloadSheet(context, info: info);
+    if (!mounted) return;
+    // After the sheet closes, the user is either on the new version (in which
+    // case a re-check below will report no update) or they cancelled. Either
+    // way, refresh the dot state.
+    final after = await svc.check();
+    if (!mounted) return;
+    setState(() {
+      _pendingUpdate = (after != null && after.hasUpdate) ? after : null;
+    });
   }
 
   Future<void> _changePin() async {
@@ -487,10 +479,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SoftCard(
             child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.system_update_alt_rounded,
-                  color: AppColors.primary),
-              title: const Text('Check for updates'),
-              subtitle: const Text('Looks for a newer release on the website'),
+              leading: SizedBox(
+                width: 32,
+                height: 32,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Positioned.fill(
+                      child: Icon(Icons.system_update_alt_rounded,
+                          color: AppColors.primary),
+                    ),
+                    if (_pendingUpdate != null)
+                      const Positioned(
+                        right: -4,
+                        top: -4,
+                        child: PulseDot(),
+                      ),
+                  ],
+                ),
+              ),
+              title: Row(
+                children: [
+                  const Text('Check for updates'),
+                  if (_pendingUpdate != null) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.danger.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'v${_pendingUpdate!.latestVersion}',
+                        style: const TextStyle(
+                          color: AppColors.danger,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              subtitle: Text(
+                _pendingUpdate != null
+                    ? 'A newer version is ready — tap to install'
+                    : 'Looks for a newer release on the website',
+              ),
               trailing: _checkingUpdate
                   ? const SizedBox(
                       width: 18,

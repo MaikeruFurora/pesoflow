@@ -1,7 +1,7 @@
 name: iponlock
 description: "PesoFlow — secure savings, wallets, goals, and debt tracker."
 publish_to: 'none'
-version: 1.8.5+18
+version: 1.8.6+19
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
