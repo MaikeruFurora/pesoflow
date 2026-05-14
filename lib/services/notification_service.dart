@@ -301,9 +301,9 @@ class NotificationService {
   }
 
   // --------------------------------------------------------- Inactivity --
-  /// Schedules three motivational reminders firing 1, 3, and 7 days after the
-  /// user's last activity (at 9 AM local). Any existing inactivity reminders
-  /// are cancelled first, so this is safe to call on every activity.
+  /// Schedules four motivational reminders firing 1, 3, 5, and 7 days after
+  /// the user's last activity (at 9 AM local). Any existing inactivity
+  /// reminders are cancelled first, so this is safe to call on every activity.
   Future<void> scheduleInactivityReminders({
     required DateTime lastActivity,
   }) async {
@@ -319,6 +319,7 @@ class NotificationService {
     );
     final oneDay = base.add(const Duration(days: 1));
     final threeDay = base.add(const Duration(days: 3));
+    final fiveDay = base.add(const Duration(days: 5));
     final sevenDay = base.add(const Duration(days: 7));
     final now = tz.TZDateTime.now(tz.local);
 
@@ -329,6 +330,10 @@ class NotificationService {
     const threeDayTitle = '💸 Miss kita! Where did the pesos go?';
     const threeDayBody =
         'It\'s been 3 days since your last entry. Got an expense or income to record? Tap to log it now — small habits, big ipon.';
+
+    const fiveDayTitle = '🪙 5 days — your peso flow is gathering dust';
+    const fiveDayBody =
+        'Five days since your last log. The longer the gap, the harder it is to remember what you spent on. One quick entry now keeps the streak alive — kayang-kaya!';
 
     const sevenDayTitle = '🐷 Your piggy bank misses you';
     const sevenDayBody =
@@ -376,6 +381,27 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
+    if (fiveDay.isAfter(now)) {
+      await _plugin.zonedSchedule(
+        _stableId('inactivity-5d'),
+        fiveDayTitle,
+        fiveDayBody,
+        fiveDay,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            _channelInactivity.id,
+            _channelInactivity.name,
+            channelDescription: _channelInactivity.description,
+            importance: Importance.high,
+            priority: Priority.high,
+            styleInformation: const BigTextStyleInformation(fiveDayBody),
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    }
     if (sevenDay.isAfter(now)) {
       await _plugin.zonedSchedule(
         _stableId('inactivity-7d'),
@@ -403,6 +429,7 @@ class NotificationService {
     await init();
     await _plugin.cancel(_stableId('inactivity-1d'));
     await _plugin.cancel(_stableId('inactivity-3d'));
+    await _plugin.cancel(_stableId('inactivity-5d'));
     await _plugin.cancel(_stableId('inactivity-7d'));
   }
 
