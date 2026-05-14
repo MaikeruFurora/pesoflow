@@ -43,10 +43,17 @@ class UpdateService {
   Future<UpdateInfo?> check() async {
     try {
       final pkg = await PackageInfo.fromPlatform();
+      // Cache-busting query string defeats GitHub Pages CDN edge caching and
+      // any HTTP client cache layer, so a freshly published version.json is
+      // visible immediately instead of after the CDN TTL expires.
+      final bustedUrl = '$versionJsonUrl?t=${DateTime.now().millisecondsSinceEpoch}';
       final res = await http
           .get(
-            Uri.parse(versionJsonUrl),
-            headers: {'cache-control': 'no-cache'},
+            Uri.parse(bustedUrl),
+            headers: const {
+              'cache-control': 'no-cache, no-store, max-age=0',
+              'pragma': 'no-cache',
+            },
           )
           .timeout(_timeout);
       if (res.statusCode != 200) return null;
