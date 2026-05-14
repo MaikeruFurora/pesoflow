@@ -1,6 +1,6 @@
 {
-  "version": "1.8.6",
-  "versionCode": 19,
+  "version": "1.8.7",
+  "versionCode": 20,
   "url": "https://maikerufurora.github.io/pesoflow/peso-flow.apk",
-  "notes": "Settings → Updates now shows an animated pulse dot + version pill when a new release is ready. The 'Check for updates' tile also routes through the in-app download sheet directly, matching the dashboard banner flow — no more browser hop from settings either."
+  "notes": "Restore bug fixed — vault wallets now come back into the Secret Vault instead of leaking into the main wallets list. If your device doesn't have a vault PIN yet, you'll be asked to set one the first time you open the vault after restoring."
 }
